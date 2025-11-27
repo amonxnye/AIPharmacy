@@ -16,6 +16,3 @@ env:
     value: 1:983016840228:web:611029ab98d90e90694cb1
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: G-R3KXDGR7TG
-
-# Root directory where the app is located
-rootDirectory: web
