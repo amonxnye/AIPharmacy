@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, Search } from "lucide-react";
+import OrganizationSelector from "@/components/OrganizationSelector";
 
 export default function Header() {
   return (
@@ -19,6 +20,9 @@ export default function Header() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
+        {/* Organization Selector - Only shows if user has multiple orgs */}
+        <OrganizationSelector />
+
         {/* Notifications */}
         <button className="relative rounded-lg p-2 hover:bg-gray-100">
           <Bell className="h-5 w-5 text-gray-600" />
