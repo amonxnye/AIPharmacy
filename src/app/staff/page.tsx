@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { staffService, type StaffMember } from "@/lib/services/staffService";
+import InviteStaffModal from "@/components/modals/InviteStaffModal";
 import {
   Plus,
   Search,
@@ -41,6 +42,7 @@ export default function StaffPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   useEffect(() => {
     loadStaff();
@@ -105,7 +107,10 @@ export default function StaffPage() {
             Manage your team members and their roles
           </p>
         </div>
-        <button className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-teal-700">
+        <button
+          onClick={() => setShowInviteModal(true)}
+          className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-teal-700"
+        >
           <Plus className="h-5 w-5" />
           Add Staff Member
         </button>
@@ -296,6 +301,13 @@ export default function StaffPage() {
           ))
         )}
       </div>
+
+      {/* Invite Staff Modal */}
+      <InviteStaffModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        onSuccess={() => loadStaff()}
+      />
     </div>
   );
 }
