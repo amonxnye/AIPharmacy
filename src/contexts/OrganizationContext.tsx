@@ -30,7 +30,7 @@ interface OrganizationContextType {
   branches: Branch[];
   selectedBranch: Branch | null;
   loading: boolean;
-  setSelectedBranch: (branch: Branch) => void;
+  setSelectedBranch: (branch: Branch | null) => void;
   refreshOrganization: () => Promise<void>;
   refreshBranches: () => Promise<void>;
 }

@@ -15,6 +15,10 @@ export interface Organization {
   currency: string;
   taxRate: number;
   ownerId: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  country?: string;
   createdAt: Date;
 }
 
@@ -24,6 +28,10 @@ export interface CreateOrganizationData {
   currency: string;
   taxRate: number;
   ownerId: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  country?: string;
 }
 
 export const organizationService = {

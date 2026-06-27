@@ -2,9 +2,10 @@
 
 ## AI-Pharmacy Multi-Tenant Outlet Management System
 
-**Version:** 1.0
-**Date:** December 6, 2025
-**Status:** Draft
+**Version:** 2.0
+**Date:** June 27, 2026
+**Status:** Active
+**Previous Version:** 1.0 (December 6, 2025)
 
 ---
 
@@ -18,7 +19,11 @@
 6. [Non-Functional Requirements](#6-non-functional-requirements)
 7. [Data Requirements](#7-data-requirements)
 8. [User Roles and Permissions](#8-user-roles-and-permissions)
-9. [Appendices](#9-appendices)
+9. [Global Market Strategy](#9-global-market-strategy)
+10. [Monetization & Business Model](#10-monetization--business-model)
+11. [Compliance & Data Governance](#11-compliance--data-governance)
+12. [Competitive Differentiation](#12-competitive-differentiation)
+13. [Appendices](#13-appendices)
 
 ---
 
@@ -26,21 +31,21 @@
 
 ### 1.1 Purpose
 
-This Software Requirements Specification (SRS) document provides a complete description of the AI-Pharmacy Multi-Tenant Outlet Management System. It describes the functional and non-functional requirements, system architecture, and design constraints for developers, testers, project managers, and stakeholders.
+This Software Requirements Specification (SRS) document provides a complete description of the AI-Pharmacy Multi-Tenant Outlet Management System. It describes functional and non-functional requirements, system architecture, business model, global market strategy, and compliance requirements for developers, testers, project managers, investors, and stakeholders.
 
 ### 1.2 Scope
 
-**AI-Pharmacy** is a cloud-based, multi-tenant SaaS platform designed to enable pharmacy businesses to:
+**AI-Pharmacy** is a cloud-based, multi-tenant SaaS platform designed to enable pharmacy businesses worldwide to:
 
-- Manage multiple pharmacy outlets/branches
-- Track inventory with batch and expiry management
-- Process point-of-sale transactions
-- Manage staff with role-based access control
+- Manage multiple pharmacy outlets/branches from a single dashboard
+- Track inventory with batch-level and expiry date management
+- Process point-of-sale transactions with configurable tax rules
+- Manage staff with role-based access control and email invitations
 - Handle procurement and supplier relationships
 - Generate sales reports and analytics
-- Provide AI-powered insights (future phase)
+- Provide AI-powered demand forecasting, drug interaction alerts, and fraud detection (roadmap)
 
-The system supports independent organizations (tenants) with complete data isolation, custom branding, and flexible configuration.
+The system supports independent organizations (tenants) with complete data isolation, multi-currency support, configurable tax regimes, and flexible role-based access.
 
 ### 1.3 Definitions, Acronyms, and Abbreviations
 
@@ -56,23 +61,21 @@ The system supports independent organizations (tenants) with complete data isola
 | GRN | Goods Receipt Note |
 | RBAC | Role-Based Access Control |
 | VAT | Value Added Tax |
+| GST | Goods and Services Tax |
+| GDPR | General Data Protection Regulation |
+| i18n | Internationalization |
+| MRR | Monthly Recurring Revenue |
 
 ### 1.4 References
 
 - [Development Concept Document](Develpoment.md)
-- [Firebase Documentation](Firebase.md)
-- [Deployment Guide](DEPLOYMENT.md)
+- [Implementation Plan](IMPLEMENTATION_PLAN.md)
 - [Project README](README.md)
+- [Firebase Documentation](https://firebase.google.com/docs)
 
 ### 1.5 Overview
 
-This document is organized into nine sections covering:
-- System description and context
-- Detailed functional requirements
-- Interface specifications
-- Architecture and design
-- Quality attributes
-- Data models and security
+This document is organized into thirteen sections covering system description, functional requirements, interface specifications, architecture, quality attributes, data models, security, global market strategy, monetization, compliance, and competitive positioning.
 
 ---
 
@@ -80,476 +83,397 @@ This document is organized into nine sections covering:
 
 ### 2.1 Product Perspective
 
-AI-Pharmacy is a standalone web-based system that operates as a multi-tenant SaaS platform. It integrates with:
+AI-Pharmacy is a standalone web-based SaaS platform operating across global markets. It integrates with:
 
-- **Firebase Services**: Authentication, Firestore database, Cloud Functions, Hosting
-- **Payment Gateways**: Stripe/Flutterwave (future)
-- **Barcode Scanners**: USB/Bluetooth devices for POS
-- **Receipt Printers**: Thermal and standard printers
-- **Mobile Devices**: Responsive web interface for tablets and phones
+- **Firebase Services**: Authentication, Firestore database, Cloud Functions, Cloud Storage, Hosting
+- **Payment Gateways**: Stripe (global), Flutterwave (Africa), Razorpay (India) — planned
+- **Barcode Scanners**: USB/Bluetooth HID devices for POS
+- **Receipt Printers**: Thermal and standard printers via browser print API
+- **Mobile Devices**: Fully responsive web interface for tablets and phones
 
 ### 2.2 Product Functions
 
-The major functions include:
+1. **Public Landing & Self-Service Onboarding**
+   - Marketing landing page with value proposition, pricing tiers, and testimonials
+   - Self-service registration with no credit card required
+   - Guided 2-step onboarding (organization setup, first branch creation)
 
-1. **Multi-Tenant Organization Management**
-   - Independent organization registration
-   - Custom branding and configuration
-   - Subscription and billing management
+2. **Multi-Tenant Organization Management**
+   - Independent organization registration with data isolation
+   - Multi-organization membership (one user, many orgs)
+   - Organization switching from any page
+   - Configurable currency, tax type, and tax rate per organization
 
-2. **Outlet/Branch Management**
-   - Create and manage multiple outlets
+3. **Outlet/Branch Management**
+   - Create and manage multiple outlets with license tracking
    - Assign staff to specific branches
-   - Track branch-level performance
+   - Outlet-scoped inventory and sales views
 
-3. **Inventory Management**
-   - Product catalog management
-   - Batch tracking with expiry dates
-   - Stock movements (in/out/transfer)
-   - Low stock and expiry alerts
+4. **Inventory Management**
+   - Product catalog with pharmaceutical metadata (generic name, strength, form, prescription flags)
+   - Batch-level stock tracking with expiry date management
+   - Low stock alerts and expiry warnings
+   - FIFO stock deduction logic
 
-4. **Point of Sale (POS)**
+5. **Point of Sale (POS)**
    - Fast product search and barcode scanning
-   - Shopping cart management
-   - Multiple payment methods
+   - Shopping cart with quantity management
+   - Configurable tax calculation (VAT, GST, Sales Tax)
+   - Multiple payment methods (cash, mobile money, card)
    - Digital receipt generation
 
-5. **Staff Management**
-   - User invitation and onboarding
-   - Role-based access control
-   - Branch assignment
-   - Activity tracking
+6. **Staff Management**
+   - Email invitation system with secure token-based acceptance
+   - 5 role types with granular permission matrix
+   - Branch assignment per staff member
+   - Role-based navigation filtering and page access enforcement
 
-6. **Procurement**
-   - Purchase requisitions
-   - Purchase orders
-   - Supplier management
-   - Goods receipt notes
+7. **Self-Service Account Management**
+   - Password reset via email
+   - Profile editing
+   - Organization settings with real-time save
+   - Help & support links, feedback channel
 
-7. **Reports and Analytics**
+8. **Reports and Analytics** (roadmap)
    - Sales reports (daily, weekly, monthly)
-   - Inventory reports
-   - Financial summaries
+   - Inventory valuation and expiry reports
    - Staff performance metrics
 
-8. **Settings and Configuration**
-   - Organization settings
-   - User profile management
-   - Notification preferences
-   - Security settings
+9. **AI Modules** (roadmap)
+   - Demand forecasting with reorder recommendations
+   - Drug interaction alerts at POS
+   - Fraud detection for anomalous transaction patterns
 
 ### 2.3 User Classes and Characteristics
 
 | User Class | Technical Expertise | Frequency of Use | Key Functions |
 |------------|-------------------|------------------|---------------|
-| **Owner/Admin** | Medium | Daily | Full system access, billing, configuration |
-| **Manager** | Medium | Daily | Outlet operations, staff management, procurement |
-| **Pharmacist** | Low | Daily | Inventory, dispensing assistance |
+| **Owner/Admin** | Medium | Daily | Full system access, billing, configuration, staff management |
+| **Manager** | Medium | Daily | Outlet operations, staff management, procurement, reports |
+| **Pharmacist** | Low | Daily | Inventory management, dispensing, stock adjustments |
 | **Cashier** | Low | Daily | POS operations, receipt generation |
-| **Inventory Officer** | Low | Daily | Stock management, procurement |
+| **Inventory Officer** | Low | Daily | Stock management, procurement, stock adjustments |
 
 ### 2.4 Operating Environment
 
-- **Client**: Modern web browsers (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
-- **Server**: Firebase Cloud Functions (Node.js runtime)
+- **Client**: Modern web browsers (Chrome 100+, Firefox 100+, Safari 16+, Edge 100+)
+- **Server**: Firebase Cloud Functions (Node.js 18+ runtime)
 - **Database**: Firebase Firestore (NoSQL document database)
-- **Hosting**: Firebase Hosting or Vercel
-- **Devices**: Desktop computers, tablets, smartphones
+- **Hosting**: Firebase App Hosting
+- **Framework**: Next.js 16 (React 19, App Router)
+- **Language**: TypeScript 5.9
+- **Styling**: TailwindCSS 3.4
+- **Devices**: Desktop, tablets, smartphones (minimum 360px width)
 
 ### 2.5 Design and Implementation Constraints
 
-- Must use Firebase as the primary backend service
-- Must support multi-tenant architecture with complete data isolation
-- Must be responsive and work on devices with minimum 360px width
-- Must comply with data protection regulations (GDPR, local data laws)
-- Must support offline capability for POS (future requirement)
-- Must maintain < 3 second page load times
+- Firebase as primary backend (Authentication, Firestore, Cloud Functions, Storage)
+- Multi-tenant architecture with strict data isolation per organization
+- Responsive design for minimum 360px viewport width
+- Page load times under 3 seconds on 4G connections
+- Role-based access enforced at both UI and database levels
+- Configurable tax and currency per organization (no hardcoded regional assumptions)
 
 ### 2.6 Assumptions and Dependencies
 
 **Assumptions:**
-- Users have stable internet connectivity
+- Users have internet connectivity (offline mode planned for Phase 3)
 - Users have modern web browsers
-- Organizations have valid email addresses for staff
+- Organizations have valid email addresses for staff invitations
 - Payment gateways are available in target markets
 
 **Dependencies:**
-- Firebase service availability and uptime
+- Firebase service availability (99.95% SLA)
 - Third-party payment gateway APIs
-- Barcode scanner hardware compatibility
-- Printer driver support
+- Email delivery for invitations and password resets
+- Barcode scanner and printer hardware compatibility
 
 ---
 
 ## 3. System Features
 
-### 3.1 Authentication and Authorization
+### 3.1 Public Landing Page & Marketing
 
 #### 3.1.1 Description
-Secure user authentication and role-based access control system.
+Public-facing landing page that communicates value proposition, pricing, features, and trust signals to prospective customers worldwide.
 
 #### 3.1.2 Functional Requirements
+
+**FR-LAND-001**: The system shall display a marketing landing page at the root URL (/) for unauthenticated users.
+
+**FR-LAND-002**: The landing page shall include: hero section with CTA, feature grid, pricing tiers (Starter/Professional/Enterprise), testimonials, trust statistics, and footer.
+
+**FR-LAND-003**: Authenticated users visiting the root URL shall be redirected to the dashboard.
+
+**FR-LAND-004**: The landing page shall include navigation links to sign in and registration.
+
+**FR-LAND-005**: The landing page shall be responsive and render correctly on mobile devices.
+
+#### 3.1.3 Priority
+High — First impression for all potential customers
+
+---
+
+### 3.2 Authentication and Authorization
+
+#### 3.2.1 Description
+Secure user authentication with multi-organization membership and role-based access control.
+
+#### 3.2.2 Functional Requirements
 
 **FR-AUTH-001**: The system shall allow users to register with email and password.
 
 **FR-AUTH-002**: The system shall authenticate users using Firebase Authentication.
 
-**FR-AUTH-003**: The system shall support password reset via email.
+**FR-AUTH-003**: The system shall support password reset via email using Firebase's sendPasswordResetEmail API.
 
-**FR-AUTH-004**: The system shall enforce password complexity requirements (min 8 characters, 1 uppercase, 1 number).
+**FR-AUTH-004**: The system shall enforce password complexity requirements (minimum 8 characters).
 
 **FR-AUTH-005**: The system shall automatically redirect authenticated users to the dashboard.
 
-**FR-AUTH-006**: The system shall redirect unauthenticated users to the login page.
+**FR-AUTH-006**: The system shall redirect unauthenticated users to the login page for protected routes.
 
 **FR-AUTH-007**: The system shall maintain user session state across browser tabs.
 
-**FR-AUTH-008**: The system shall allow users to sign out from all devices.
+**FR-AUTH-008**: The system shall allow users to sign out from any page via the sidebar logout button.
 
-#### 3.1.3 Priority
-High - Critical for system security
+**FR-AUTH-009**: The system shall support multi-organization membership — a single user can belong to multiple organizations.
+
+**FR-AUTH-010**: The system shall provide an organization selector for users with multiple memberships.
+
+**FR-AUTH-011**: The system shall persist the selected organization across sessions via localStorage.
+
+**FR-AUTH-012**: The system shall display the user's real name and role in the sidebar (not hardcoded values).
+
+#### 3.2.3 Priority
+High — Critical for system security
 
 ---
 
-### 3.2 Organization Onboarding
+### 3.3 Organization Onboarding
 
-#### 3.2.1 Description
-Multi-step wizard for new organizations to set up their pharmacy business.
+#### 3.3.1 Description
+Self-service 2-step wizard for new organizations to configure their pharmacy business.
 
-#### 3.2.2 Functional Requirements
+#### 3.3.2 Functional Requirements
 
-**FR-ORG-001**: The system shall guide new users through an onboarding wizard.
+**FR-ORG-001**: The system shall guide new users through a 2-step onboarding wizard.
 
-**FR-ORG-002**: The system shall collect organization details:
+**FR-ORG-002**: Step 1 shall collect organization details:
 - Organization name (required)
-- Logo/branding (optional)
-- Currency (required, default: UGX)
-- Tax rate (required, default: 18%)
-- Contact information (optional)
+- Currency (required, from a globally comprehensive list covering Africa, Americas, Europe, Asia-Pacific, and Middle East)
+- Tax rate (required, configurable decimal percentage)
 
-**FR-ORG-003**: The system shall require creation of at least one branch during onboarding.
+**FR-ORG-003**: Step 2 shall collect first branch details:
+- Branch name (required)
+- Address (required)
+- Phone number (required)
+- Pharmacy license number (required)
 
 **FR-ORG-004**: The system shall create a unique organization ID for each tenant.
 
 **FR-ORG-005**: The system shall set the registering user as the organization owner.
 
-**FR-ORG-006**: The system shall redirect to dashboard after successful onboarding.
+**FR-ORG-006**: The system shall redirect to the dashboard after successful onboarding.
 
-#### 3.2.3 Priority
-High - Required for tenant setup
-
----
-
-### 3.3 Branch/Outlet Management
-
-#### 3.3.1 Description
-Manage multiple pharmacy outlets with individual configurations.
-
-#### 3.3.2 Functional Requirements
-
-**FR-BRANCH-001**: The system shall allow creation of new branches with:
-- Name (required)
-- Address (required)
-- Phone number (required)
-- Pharmacy license number (required)
-- Opening hours (optional)
-
-**FR-BRANCH-002**: The system shall display all branches in a grid/list view.
-
-**FR-BRANCH-003**: The system shall allow searching branches by name or address.
-
-**FR-BRANCH-004**: The system shall allow editing branch information.
-
-**FR-BRANCH-005**: The system shall allow soft-deletion of branches (mark as inactive).
-
-**FR-BRANCH-006**: The system shall display branch statistics:
-- Number of assigned staff
-- Number of products stocked
-- Daily sales (when implemented)
-
-**FR-BRANCH-007**: The system shall prevent deletion of branches with active inventory.
-
-**FR-BRANCH-008**: The system shall show active/inactive status for each branch.
+**FR-ORG-007**: The currency selector shall support 30+ currencies organized by region (Africa, Americas, Europe, Asia-Pacific, Middle East).
 
 #### 3.3.3 Priority
-High - Core functionality
+High — Required for tenant setup
 
 ---
 
-### 3.4 Staff Management
+### 3.4 Branch/Outlet Management
 
 #### 3.4.1 Description
-Comprehensive staff management with role-based permissions.
+Manage multiple pharmacy outlets with individual configurations and outlet-scoped operations.
 
 #### 3.4.2 Functional Requirements
 
-**FR-STAFF-001**: The system shall support five role types:
-- Owner (full access)
-- Manager (outlet operations, staff, inventory, procurement)
-- Pharmacist (inventory, dispensing)
-- Cashier (POS only)
-- Inventory Officer (stock management only)
+**FR-BRANCH-001**: The system shall allow creation of new branches with name, address, phone, and pharmacy license number.
 
-**FR-STAFF-002**: The system shall allow adding staff members with:
-- Name (required)
-- Email (required, unique)
-- Phone (optional)
-- Role (required)
-- Assigned branches (required, multiple)
+**FR-BRANCH-002**: The system shall display all branches in a searchable grid view.
 
-**FR-STAFF-003**: The system shall send invitation emails to new staff (future).
+**FR-BRANCH-003**: The system shall provide a real outlet selector in the header, populated from the organization's actual branches.
 
-**FR-STAFF-004**: The system shall display all staff in a grid/card view.
+**FR-BRANCH-004**: The outlet selector shall include an "All Outlets" option for aggregate views.
 
-**FR-STAFF-005**: The system shall allow searching staff by name or email.
+**FR-BRANCH-005**: The system shall allow editing and soft-deleting branches.
 
-**FR-STAFF-006**: The system shall allow filtering staff by role.
+**FR-BRANCH-006**: The system shall display branch statistics (staff count, product count).
 
-**FR-STAFF-007**: The system shall display role-based statistics:
-- Total staff count
-- Count by role type
-- Active vs inactive
-
-**FR-STAFF-008**: The system shall allow editing staff details and role assignments.
-
-**FR-STAFF-009**: The system shall allow deactivating staff members (soft delete).
-
-**FR-STAFF-010**: The system shall show branch assignments for each staff member.
-
-**FR-STAFF-011**: The system shall prevent role changes that would remove the last owner.
+**FR-BRANCH-007**: The system shall restrict branch management pages to Owner and Manager roles only.
 
 #### 3.4.3 Priority
-High - Essential for access control
+High — Core functionality
 
 ---
 
-### 3.5 Inventory Management
+### 3.5 Staff Management
 
 #### 3.5.1 Description
-Complete product catalog and stock management system.
+Staff management with email invitations, role-based permissions, and branch assignments.
 
 #### 3.5.2 Functional Requirements
 
-**FR-INV-001**: The system shall allow adding products with:
-- Name (required)
-- Generic name (optional)
-- SKU (required, unique per organization)
-- Barcode (optional, unique)
-- Category (required)
-- Strength (optional, e.g., "500mg")
-- Form (required: tablet, capsule, syrup, injection, cream, drops, inhaler, other)
-- Pack size (optional, e.g., "10 tablets")
-- Description (optional)
-- Manufacturer (optional)
-- Prescription requirement (boolean)
+**FR-STAFF-001**: The system shall support five role types: Owner, Manager, Pharmacist, Cashier, Inventory Officer.
 
-**FR-INV-002**: The system shall allow adding stock batches with:
-- Product reference (required)
-- Branch reference (required)
-- Batch number (required)
-- Expiry date (required)
-- Quantity (required, positive integer)
-- Cost price (required, positive decimal)
-- Selling price (required, positive decimal)
-- Supplier (optional)
-- Received date (required)
+**FR-STAFF-002**: The system shall allow inviting staff via email with role and branch assignments.
 
-**FR-INV-003**: The system shall display all products in a table/grid view.
+**FR-STAFF-003**: The invitation system shall generate secure random tokens (32 bytes, hex-encoded) with 7-day expiry.
 
-**FR-INV-004**: The system shall allow searching products by name, SKU, or barcode.
+**FR-STAFF-004**: Invited users shall accept invitations via a token-based URL (/auth/accept-invite?token=...).
 
-**FR-INV-005**: The system shall display product statistics:
-- Total products
-- In-stock products
-- Low-stock products (< 10 units)
-- Expiring soon (< 30 days)
+**FR-STAFF-005**: New invitees shall be prompted to create an account; existing users shall have the organization added to their memberships.
 
-**FR-INV-006**: The system shall highlight products with low stock (orange badge).
+**FR-STAFF-006**: The system shall restrict staff management pages to Owner and Manager roles.
 
-**FR-INV-007**: The system shall highlight products expiring within 30 days (red badge).
-
-**FR-INV-008**: The system shall calculate total stock across all batches.
-
-**FR-INV-009**: The system shall show stock-out status when total quantity = 0.
-
-**FR-INV-010**: The system shall allow editing product information.
-
-**FR-INV-011**: The system shall allow deleting products (if no stock exists).
-
-**FR-INV-012**: The system shall display empty state with call-to-action when no products exist.
-
-**FR-INV-013**: The system shall support batch-level stock tracking (FIFO logic).
+**FR-STAFF-007**: The system shall display staff with role-based filtering and search.
 
 #### 3.5.3 Priority
-High - Core business functionality
+High — Essential for access control
 
 ---
 
-### 3.6 Point of Sale (POS)
+### 3.6 Inventory Management
 
 #### 3.6.1 Description
-Fast and efficient sales processing interface.
+Product catalog and stock management with pharmaceutical-specific metadata.
 
 #### 3.6.2 Functional Requirements
 
-**FR-POS-001**: The system shall provide a product search interface with:
-- Text search by name or SKU
-- Barcode scanning support (future)
-- Category filtering
-- Real-time search results
+**FR-INV-001**: The system shall allow adding products with: name, generic name, SKU, barcode, category, strength, form (tablet/capsule/syrup/injection/cream/drops/inhaler/other), pack size, manufacturer, and prescription requirement flag.
 
-**FR-POS-002**: The system shall display a shopping cart with:
-- Product name and details
-- Quantity (adjustable)
-- Unit price
-- Line total
-- Remove item button
+**FR-INV-002**: The system shall allow adding stock batches with: product reference, branch reference, batch number, expiry date, quantity, cost price, selling price, supplier, and received date.
 
-**FR-POS-003**: The system shall calculate:
-- Subtotal (sum of all line items)
-- Tax amount (configurable rate, default 18%)
-- Grand total (subtotal + tax)
+**FR-INV-003**: The system shall display product statistics: total products, in-stock, low-stock (<10 units), expiring soon (<30 days).
 
-**FR-POS-004**: The system shall allow changing product quantity in cart.
+**FR-INV-004**: The system shall highlight low stock (orange) and expiring products (red).
 
-**FR-POS-005**: The system shall allow removing items from cart.
+**FR-INV-005**: The system shall support batch-level stock tracking with FIFO deduction logic.
 
-**FR-POS-006**: The system shall validate stock availability before adding to cart.
-
-**FR-POS-007**: The system shall support multiple payment methods:
-- Cash
-- Mobile Money
-- Card
-- Corporate Account (future)
-
-**FR-POS-008**: The system shall process checkout and:
-- Deduct stock from inventory (FIFO)
-- Create sale record
-- Generate receipt
-- Clear cart
-- Show success confirmation
-
-**FR-POS-009**: The system shall allow void/cancel transaction (with permissions).
-
-**FR-POS-010**: The system shall display recently sold items.
-
-**FR-POS-011**: The system shall support discount application (future).
-
-**FR-POS-012**: The system shall print receipt to thermal printer (future).
+**FR-INV-006**: The system shall allow all roles to view inventory; only Owner, Manager, Pharmacist, and Inventory Officer may add/edit products.
 
 #### 3.6.3 Priority
-High - Primary revenue-generating feature
+High — Core business functionality
 
 ---
 
-### 3.7 Settings Management
+### 3.7 Point of Sale (POS)
 
 #### 3.7.1 Description
-Comprehensive settings for organization, profile, notifications, security, and billing.
+Sales processing interface with cart management and configurable tax calculation.
 
 #### 3.7.2 Functional Requirements
 
-**FR-SET-001**: The system shall provide a tabbed settings interface with:
-- Organization settings
-- Profile settings
-- Notification preferences
-- Security settings
-- Billing and subscription
+**FR-POS-001**: The system shall provide product search by name, SKU, or barcode.
 
-**FR-SET-002**: Organization settings shall allow editing:
-- Organization name
-- Email and phone
-- Currency
-- Tax rate (%)
-- Business address
+**FR-POS-002**: The system shall display a shopping cart with product details, quantity controls, unit price, and line totals.
 
-**FR-SET-003**: Profile settings shall allow editing:
-- Full name
-- Phone number
-- (Email read-only)
-- (Role read-only)
+**FR-POS-003**: The system shall calculate subtotal, tax (using the organization's configured tax rate, not hardcoded), and grand total.
 
-**FR-SET-004**: Notification preferences shall allow toggling:
-- Low stock alerts
-- Expiring products alerts
-- New orders
-- Daily reports
-- Weekly reports
-- Monthly reports
+**FR-POS-004**: The system shall support multiple payment methods: cash, mobile money, card.
 
-**FR-SET-005**: Security settings shall provide:
-- Change password functionality
-- Two-factor authentication setup (future)
-- Active sessions management (future)
+**FR-POS-005**: The system shall process checkout: create sale record, deduct stock (FIFO), generate receipt, clear cart.
 
-**FR-SET-006**: Billing settings shall display:
-- Current subscription plan
-- Payment methods
-- Billing history
-- Upgrade/downgrade options (future)
+**FR-POS-006**: The system shall restrict POS access to Owner, Manager, Pharmacist, and Cashier roles.
 
-**FR-SET-007**: The system shall save changes with loading state feedback.
-
-**FR-SET-008**: The system shall validate all form inputs before saving.
-
-**FR-SET-009**: The system shall show success message after saving.
+**FR-POS-007**: The system shall validate stock availability before adding to cart.
 
 #### 3.7.3 Priority
-Medium - Important for customization
+High — Primary revenue-generating feature
 
 ---
 
-### 3.8 Dashboard and Reports
+### 3.8 Settings Management
 
 #### 3.8.1 Description
-Overview dashboard with key metrics and insights.
+Settings with real persistence for organization, profile, notifications, security, and billing.
 
 #### 3.8.2 Functional Requirements
 
-**FR-DASH-001**: The system shall display a dashboard with:
-- Total sales (daily, weekly, monthly)
-- Total products count
-- Low stock count
-- Active staff count
-- Recent transactions list
-- Quick action buttons
+**FR-SET-001**: The system shall provide a tabbed settings interface (Organization, Profile, Notifications, Security, Billing).
 
-**FR-DASH-002**: The system shall show sales trends chart (future).
+**FR-SET-002**: Organization settings shall persist changes to Firestore on save (name, email, phone, currency, tax rate, address).
 
-**FR-DASH-003**: The system shall display top-selling products (future).
+**FR-SET-003**: Profile settings shall persist changes to the user's Firestore document (name, phone).
 
-**FR-DASH-004**: The system shall show branch comparison metrics (future).
+**FR-SET-004**: The system shall display success/error feedback after save operations.
 
-**FR-DASH-005**: The system shall provide date range filters for reports (future).
+**FR-SET-005**: The currency selector in settings shall match the comprehensive global currency list used during onboarding.
 
-**FR-DASH-006**: The system shall allow exporting reports to PDF/Excel (future).
+**FR-SET-006**: Security settings shall include a password reset option using Firebase Authentication.
+
+**FR-SET-007**: Settings pages shall be restricted to Owner and Manager roles.
 
 #### 3.8.3 Priority
-Medium - Analytics and insights
+Medium — Important for customization
 
 ---
 
-### 3.9 Procurement Module
+### 3.9 Dashboard
 
 #### 3.9.1 Description
-Purchase requisition and order management (future phase).
+Overview dashboard with key metrics, alerts, and quick actions.
 
 #### 3.9.2 Functional Requirements
 
-**FR-PROC-001**: The system shall allow creating purchase requisitions (PR).
+**FR-DASH-001**: The dashboard shall display real-time data from Firestore (sales totals, product counts, low stock alerts, expiring products).
 
-**FR-PROC-002**: The system shall support PR approval workflow.
+**FR-DASH-002**: The dashboard shall show recent transactions.
 
-**FR-PROC-003**: The system shall convert approved PRs to purchase orders (PO).
+**FR-DASH-003**: The dashboard shall be accessible to all authenticated roles.
 
-**FR-PROC-004**: The system shall track supplier information and history.
-
-**FR-PROC-005**: The system shall record goods receipt notes (GRN).
-
-**FR-PROC-006**: The system shall automatically update stock on GRN confirmation.
+**FR-DASH-004**: Sales trends, top products, and branch comparison metrics are planned for Phase 2.
 
 #### 3.9.3 Priority
-Low - Future phase
+Medium — Analytics and insights
+
+---
+
+### 3.10 Self-Service Features
+
+#### 3.10.1 Description
+Features enabling users to manage their accounts independently.
+
+#### 3.10.2 Functional Requirements
+
+**FR-SELF-001**: The system shall provide a password reset page (/auth/reset-password) with email input and Firebase sendPasswordResetEmail integration.
+
+**FR-SELF-002**: The login page shall include a "Forgot password?" link to the reset page.
+
+**FR-SELF-003**: The sidebar shall include Help & Support and Send Feedback links.
+
+**FR-SELF-004**: The system shall display the authenticated user's real name and initials in the sidebar.
+
+**FR-SELF-005**: The system shall provide a visible logout button in the sidebar user section.
+
+**FR-SELF-006**: Self-service data export (CSV/PDF) is planned for Phase 2.
+
+**FR-SELF-007**: Self-service account deletion (GDPR right-to-delete) is planned for Phase 2.
+
+#### 3.10.3 Priority
+High — Critical for user retention and compliance
+
+---
+
+### 3.11 Role-Based Access Enforcement
+
+#### 3.11.1 Description
+UI-level enforcement of the permission matrix defined in Section 8.
+
+#### 3.11.2 Functional Requirements
+
+**FR-RBAC-001**: The sidebar navigation shall only display pages the current user's role has access to.
+
+**FR-RBAC-002**: Protected pages shall display an "Access Restricted" message with a link to the dashboard when accessed by unauthorized roles.
+
+**FR-RBAC-003**: The RoleGuard component shall check the user's current membership role against the page's allowed roles.
+
+**FR-RBAC-004**: The permission matrix shall be defined in a single PAGE_ROLES constant for consistency between navigation filtering and page guards.
+
+#### 3.11.3 Priority
+High — Security and compliance
 
 ---
 
@@ -557,67 +481,53 @@ Low - Future phase
 
 ### 4.1 User Interfaces
 
-#### 4.1.1 General UI Requirements
+**UI-001**: Consistent teal primary color scheme with white backgrounds.
 
-**UI-001**: The system shall use a consistent color scheme (teal primary, white background).
+**UI-002**: Fully responsive (desktop, tablet, mobile down to 360px).
 
-**UI-002**: The system shall be fully responsive (desktop, tablet, mobile).
+**UI-003**: Lucide React icons throughout.
 
-**UI-003**: The system shall use Lucide React icons consistently.
+**UI-004**: Loading states for all asynchronous operations.
 
-**UI-004**: The system shall display loading states for async operations.
+**UI-005**: Empty states with helpful messages and CTAs.
 
-**UI-005**: The system shall show empty states with helpful messages.
+**UI-006**: Error messages displayed inline with AlertCircle icons.
 
-**UI-006**: The system shall provide clear error messages.
+**UI-007**: Success feedback displayed inline with CheckCircle icons.
 
-**UI-007**: The system shall use a left sidebar navigation on desktop.
+**UI-008**: Left sidebar navigation with role-filtered menu items.
 
-**UI-008**: The system shall use a mobile-friendly hamburger menu on small screens.
+**UI-009**: Mobile-responsive navigation.
 
-#### 4.1.2 Accessibility Requirements
-
-**UI-009**: The system shall meet WCAG 2.1 Level AA standards.
-
-**UI-010**: The system shall support keyboard navigation.
-
-**UI-011**: The system shall provide alt text for images.
-
-**UI-012**: The system shall maintain sufficient color contrast (4.5:1 minimum).
+**UI-010**: Real user name, initials, and role displayed in sidebar (not hardcoded).
 
 ### 4.2 Hardware Interfaces
 
-**HW-001**: The system shall support USB barcode scanners (HID device mode).
+**HW-001**: USB barcode scanners (HID device mode) — planned.
 
-**HW-002**: The system shall support Bluetooth barcode scanners (future).
+**HW-002**: Thermal receipt printers via browser print dialog — planned.
 
-**HW-003**: The system shall support thermal receipt printers (future).
-
-**HW-004**: The system shall work on touch-screen devices.
+**HW-003**: Touch-screen device support.
 
 ### 4.3 Software Interfaces
 
-**SW-001**: The system shall integrate with Firebase Authentication.
+**SW-001**: Firebase Authentication for user identity.
 
-**SW-002**: The system shall use Firebase Firestore as the primary database.
+**SW-002**: Firebase Firestore as primary database.
 
-**SW-003**: The system shall use Firebase Cloud Functions for server-side logic.
+**SW-003**: Firebase Cloud Functions for server-side logic (email invitations, scheduled cleanup).
 
-**SW-004**: The system shall integrate with Firebase Analytics.
+**SW-004**: Firebase Cloud Storage for logos and documents — planned.
 
-**SW-005**: The system shall support Firebase Cloud Messaging for notifications (future).
-
-**SW-006**: The system shall integrate with payment gateways (Stripe/Flutterwave) (future).
+**SW-005**: Payment gateways (Stripe, Flutterwave, Razorpay) — planned.
 
 ### 4.4 Communication Interfaces
 
-**COM-001**: The system shall use HTTPS for all communications.
+**COM-001**: HTTPS for all communications.
 
-**COM-002**: The system shall use WebSocket for real-time updates (future).
+**COM-002**: Email notifications via Cloud Functions (Nodemailer).
 
-**COM-003**: The system shall support REST API endpoints via Cloud Functions.
-
-**COM-004**: The system shall send email notifications via Firebase Extensions.
+**COM-003**: REST API endpoints via Cloud Functions.
 
 ---
 
@@ -625,15 +535,17 @@ Low - Future phase
 
 ### 5.1 Technology Stack
 
-| Layer | Technology | Purpose |
+| Layer | Technology | Version |
 |-------|-----------|---------|
-| **Frontend** | Next.js 15.1.4 | React framework with App Router |
-| **UI Framework** | Tailwind CSS 3.4.17 | Utility-first styling |
-| **Language** | TypeScript 5.0 | Type-safe development |
-| **Icons** | Lucide React | Consistent iconography |
-| **Backend** | Firebase | Authentication, database, hosting |
-| **Database** | Firestore | NoSQL document store |
-| **Hosting** | Firebase Hosting | Static site hosting |
+| **Frontend** | Next.js (App Router) | 16.x |
+| **UI Library** | React | 19.x |
+| **Language** | TypeScript | 5.9 |
+| **Styling** | TailwindCSS | 3.4 |
+| **Icons** | Lucide React | Latest |
+| **Backend** | Firebase Cloud Functions | Node.js 18 |
+| **Database** | Firebase Firestore | NoSQL |
+| **Authentication** | Firebase Auth | Latest |
+| **Hosting** | Firebase App Hosting | Latest |
 
 ### 5.2 Multi-Tenant Architecture
 
@@ -642,210 +554,187 @@ Low - Future phase
 ```
 Firestore Structure:
 
+users/
+  {userId}/
+    - displayName, email, phone, photoUrl
+    - memberships: [{ organizationId, role, assignedOutletIds, joinedAt }]
+    - createdAt, lastLoginAt
+
 organizations/
   {organizationId}/
-    - name, logo, currency, taxRate, ownerId
+    - name, logo, currency, taxRate, ownerId, email, phone, address, country
+    - createdAt, updatedAt
 
     branches/
       {branchId}/
-        - name, address, phone, license
-
-    staff/
-      {staffId}/
-        - userId, name, email, role, assignedBranches[]
+        - name, address, phone, license, organizationId, createdAt
 
     products/
       {productId}/
-        - name, sku, barcode, category, form, etc.
+        - name, genericName, sku, barcode, category, form, strength
+        - packSize, manufacturer, requiresPrescription
+        - organizationId, createdAt
 
     stock/
-      {stockId}/
-        - productId, branchId, batch, expiry, quantity, prices
+      {stockBatchId}/
+        - productId, branchId, batchNumber, expiryDate
+        - quantity, costPrice, sellingPrice, supplier
+        - organizationId, createdAt
+
+    staff/
+      {staffId}/
+        - userId, name, email, role, assignedBranches
+        - organizationId, createdAt
+
+    invites/
+      {inviteId}/
+        - email, role, assignedOutletIds, status, inviteToken
+        - invitedBy, createdAt, expiresAt
 
     sales/
       {saleId}/
-        - branchId, cashierId, items[], total, paymentMethod
-
-    purchases/
-      {purchaseId}/
-        - supplierId, items[], status, etc.
-
-users/
-  {userId}/
-    - email, name, organizationId, role, assignedBranches[]
+        - branchId, cashierId, items[], subtotal, tax, total
+        - paymentMethod, status, receiptNumber, createdAt
 ```
 
 #### 5.2.2 Security Rules
 
-**RULE-001**: All Firestore reads/writes must include organizationId verification.
+- All Firestore reads/writes verify organizationId membership
+- Users can only access data from organizations they belong to
+- Role-based access enforced at both UI (RoleGuard component) and database (Firestore rules) levels
+- Staff see only data for their assigned branches
 
-**RULE-002**: Users can only access data from their own organization.
-
-**RULE-003**: Role-based access control enforced at database level.
-
-**RULE-004**: Owners can access all organization data.
-
-**RULE-005**: Staff can only access data for assigned branches.
-
-### 5.3 Application Architecture
-
-```
-┌─────────────────────────────────────────────┐
-│           User Browser/Device                │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│         Next.js Frontend (SSR/CSR)           │
-│  - React Components                          │
-│  - Context Providers (Auth, Organization)    │
-│  - Service Layer (Firestore operations)      │
-│  - Client-side routing                       │
-└─────────────────┬───────────────────────────┘
-                  │
-                  ▼
-┌─────────────────────────────────────────────┐
-│            Firebase Services                 │
-│  ┌──────────────┐  ┌──────────────┐        │
-│  │ Authentication│  │  Firestore   │        │
-│  └──────────────┘  └──────────────┘        │
-│  ┌──────────────┐  ┌──────────────┐        │
-│  │Cloud Functions│  │   Analytics  │        │
-│  └──────────────┘  └──────────────┘        │
-└─────────────────────────────────────────────┘
-```
-
-### 5.4 Component Structure
+### 5.3 Component Architecture
 
 ```
 src/
-├── app/                      # Next.js App Router
-│   ├── layout.tsx           # Root layout with providers
-│   ├── page.tsx             # Landing page
-│   ├── auth/                # Authentication pages
-│   │   ├── login/
-│   │   └── signup/
-│   ├── dashboard/           # Main dashboard
-│   ├── inventory/           # Inventory management
-│   ├── outlets/             # Branch management
-│   ├── staff/               # Staff management
-│   ├── pos/                 # Point of sale
-│   └── settings/            # Settings pages
+├── app/                          # Next.js App Router pages
+│   ├── page.tsx                 # Public landing page (marketing)
+│   ├── layout.tsx               # Root layout with AuthProvider, OrganizationProvider
+│   ├── auth/
+│   │   ├── login/               # Email/password login
+│   │   ├── register/            # Account creation
+│   │   ├── reset-password/      # Password reset (Firebase sendPasswordResetEmail)
+│   │   ├── accept-invite/       # Token-based invite acceptance
+│   │   └── select-org/          # Multi-org selector
+│   ├── onboarding/
+│   │   ├── organization/        # Step 1: org name, currency, tax
+│   │   └── branch/              # Step 2: first branch setup
+│   ├── dashboard/               # KPIs, alerts, recent sales
+│   ├── inventory/               # Product catalog, stock batches
+│   ├── pos/                     # Point of sale
+│   ├── outlets/                 # Branch management
+│   ├── staff/                   # Staff directory, invitations
+│   └── settings/                # Org, profile, notifications, security, billing
 │
-├── components/              # Reusable components
+├── components/
 │   ├── layout/
-│   │   ├── Sidebar.tsx
-│   │   └── Header.tsx
-│   └── ProtectedRoute.tsx
+│   │   ├── Sidebar.tsx          # Role-filtered navigation, real user info, logout
+│   │   └── Header.tsx           # Search, org selector, real outlet selector
+│   ├── modals/
+│   │   └── InviteStaffModal.tsx # Staff invitation with role & branch assignment
+│   ├── RoleGuard.tsx            # Role-based page access enforcement
+│   ├── ProtectedRoute.tsx       # Auth guard (redirect if not logged in)
+│   └── OrganizationSelector.tsx # Multi-org dropdown
 │
-├── contexts/                # React Context providers
-│   ├── AuthContext.tsx      # Authentication state
-│   └── OrganizationContext.tsx
+├── contexts/
+│   ├── AuthContext.tsx           # Auth state, multi-org profile, org switching
+│   └── OrganizationContext.tsx   # Current org data, branches, selected branch
 │
-├── lib/                     # Utilities and services
-│   ├── firebase.ts          # Firebase configuration
-│   ├── services/
-│   │   ├── productService.ts
-│   │   ├── staffService.ts
-│   │   └── branchService.ts
-│   └── utils.ts
+├── lib/
+│   ├── firebase.ts              # Firebase initialization
+│   ├── cloudFunctions.ts        # Cloud Function wrappers
+│   ├── utils.ts                 # Utility functions (cn)
+│   └── services/
+│       ├── organizationService.ts  # Org CRUD (with email, phone, address, country)
+│       ├── branchService.ts        # Branch CRUD
+│       ├── productService.ts       # Product & stock batch CRUD
+│       ├── staffService.ts         # Staff CRUD
+│       ├── inviteService.ts        # Token-based invitation system
+│       └── userService.ts          # Global profile, memberships
 │
-└── types/                   # TypeScript interfaces
-    ├── product.ts
-    └── staff.ts
+└── types/
+    ├── user.ts                  # GlobalUserProfile, Membership, UserRole
+    ├── product.ts               # Product, StockBatch
+    ├── staff.ts                 # StaffMember
+    └── invite.ts                # Invite
 ```
 
 ---
 
 ## 6. Non-Functional Requirements
 
-### 6.1 Performance Requirements
+### 6.1 Performance
 
-**NFR-PERF-001**: Page load time shall be < 3 seconds on 4G connection.
+**NFR-PERF-001**: Page load time < 3 seconds on 4G connection.
 
-**NFR-PERF-002**: Search results shall appear within 500ms of user input.
+**NFR-PERF-002**: Search results within 500ms of user input.
 
-**NFR-PERF-003**: POS checkout shall complete within 2 seconds.
+**NFR-PERF-003**: POS checkout within 2 seconds.
 
-**NFR-PERF-004**: The system shall support 100 concurrent users per organization.
+**NFR-PERF-004**: Support 100 concurrent users per organization.
 
-**NFR-PERF-005**: Database queries shall use indexes for optimal performance.
+**NFR-PERF-005**: Firestore indexes for all common query patterns.
 
-**NFR-PERF-006**: The system shall implement lazy loading for large lists.
+### 6.2 Security
 
-### 6.2 Security Requirements
+**NFR-SEC-001**: Passwords hashed via Firebase Authentication (bcrypt).
 
-**NFR-SEC-001**: All passwords shall be hashed using Firebase Authentication.
+**NFR-SEC-002**: All communications over HTTPS/TLS 1.3.
 
-**NFR-SEC-002**: All API communications shall use HTTPS/TLS 1.3.
+**NFR-SEC-003**: Session tokens managed by Firebase (auto-expiry, refresh).
 
-**NFR-SEC-003**: Session tokens shall expire after 24 hours of inactivity.
+**NFR-SEC-004**: Invitation tokens: 32-byte cryptographically random, hex-encoded, 7-day expiry.
 
-**NFR-SEC-004**: The system shall implement CSRF protection.
+**NFR-SEC-005**: Role-based access enforced at UI level (RoleGuard, sidebar filtering) and database level (Firestore rules).
 
-**NFR-SEC-005**: The system shall log all authentication attempts.
+**NFR-SEC-006**: Rate limiting on Cloud Function endpoints.
 
-**NFR-SEC-006**: The system shall implement rate limiting on API endpoints.
+**NFR-SEC-007**: Data encrypted at rest (Firestore default).
 
-**NFR-SEC-007**: Sensitive data shall be encrypted at rest (Firestore default).
+**NFR-SEC-008**: Audit logging for critical operations (sales, stock changes, role changes).
 
-**NFR-SEC-008**: The system shall audit all critical operations (sales, stock changes).
+### 6.3 Reliability
 
-### 6.3 Reliability Requirements
+**NFR-REL-001**: System uptime >= 99.5% per month (backed by Firebase SLA).
 
-**NFR-REL-001**: System uptime shall be ≥ 99.5% per month.
+**NFR-REL-002**: Automatic data backup (Firestore managed).
 
-**NFR-REL-002**: Data backup shall occur automatically (Firestore managed).
+**NFR-REL-003**: Graceful error handling with user-visible feedback (no silent failures).
 
-**NFR-REL-003**: The system shall gracefully handle network interruptions.
+**NFR-REL-004**: Error messages never expose internal system information.
 
-**NFR-REL-004**: Error messages shall not expose sensitive system information.
+### 6.4 Usability
 
-**NFR-REL-005**: The system shall validate all user inputs.
+**NFR-USE-001**: New users complete onboarding in < 5 minutes.
 
-### 6.4 Usability Requirements
+**NFR-USE-002**: POS sale completable in <= 3 clicks.
 
-**NFR-USE-001**: New users shall complete onboarding in < 5 minutes.
+**NFR-USE-003**: Sidebar shows real user identity (name, initials, role) — not hardcoded values.
 
-**NFR-USE-002**: POS interface shall require ≤ 3 clicks to complete a sale.
+**NFR-USE-004**: All save operations provide success/error feedback.
 
-**NFR-USE-003**: The system shall provide contextual help text.
+**NFR-USE-005**: Help & Support and Feedback links accessible from every page via sidebar.
 
-**NFR-USE-004**: Error messages shall be clear and actionable.
+### 6.5 Scalability
 
-**NFR-USE-005**: The system shall maintain consistent UI patterns.
+**NFR-SCALE-001**: Support up to 10,000 organizations.
 
-### 6.5 Scalability Requirements
+**NFR-SCALE-002**: Up to 100 branches per organization.
 
-**NFR-SCALE-001**: The system shall support up to 10,000 organizations.
+**NFR-SCALE-003**: Up to 50,000 products per organization.
 
-**NFR-SCALE-002**: Each organization shall support up to 100 branches.
+**NFR-SCALE-004**: Up to 10,000 transactions per day per organization.
 
-**NFR-SCALE-003**: The system shall handle up to 50,000 products per organization.
+### 6.6 Maintainability
 
-**NFR-SCALE-004**: The system shall process up to 10,000 transactions per day per organization.
+**NFR-MAINT-001**: TypeScript strict mode for type safety.
 
-### 6.6 Maintainability Requirements
+**NFR-MAINT-002**: Service layer pattern for all Firestore operations.
 
-**NFR-MAINT-001**: Code shall follow TypeScript best practices and ESLint rules.
+**NFR-MAINT-003**: Environment variables for all configuration (no hardcoded Firebase keys).
 
-**NFR-MAINT-002**: All functions shall have JSDoc comments.
-
-**NFR-MAINT-003**: The system shall use environment variables for configuration.
-
-**NFR-MAINT-004**: The system shall maintain separation of concerns (services, components).
-
-**NFR-MAINT-005**: The system shall use semantic versioning for releases.
-
-### 6.7 Compliance Requirements
-
-**NFR-COMP-001**: The system shall comply with GDPR for EU customers.
-
-**NFR-COMP-002**: The system shall maintain audit logs for regulatory compliance.
-
-**NFR-COMP-003**: The system shall allow data export for user requests.
-
-**NFR-COMP-004**: The system shall support data deletion (right to be forgotten).
+**NFR-MAINT-004**: Separation of concerns: contexts, services, components, types.
 
 ---
 
@@ -853,25 +742,50 @@ src/
 
 ### 7.1 Database Schema
 
-#### 7.1.1 Organization
+#### 7.1.1 Global User Profile
+
+```typescript
+interface GlobalUserProfile {
+  uid: string;
+  displayName: string;
+  email: string;
+  phone?: string;
+  photoUrl?: string;
+  memberships: Membership[];
+  createdAt: Date;
+  lastLoginAt: Date;
+}
+
+interface Membership {
+  organizationId: string;
+  role: UserRole;
+  assignedOutletIds: string[];
+  joinedAt: Date;
+}
+
+type UserRole = "owner" | "manager" | "pharmacist" | "cashier" | "inventory_officer";
+```
+
+#### 7.1.2 Organization
 
 ```typescript
 interface Organization {
   id: string;
   name: string;
   logo?: string;
-  currency: string;           // "UGX", "USD", etc.
-  taxRate: number;            // 18 = 18%
+  currency: string;
+  taxRate: number;
   ownerId: string;
-  address?: string;
-  phone?: string;
   email?: string;
+  phone?: string;
+  address?: string;
+  country?: string;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }
 ```
 
-#### 7.1.2 Branch
+#### 7.1.3 Branch
 
 ```typescript
 interface Branch {
@@ -881,26 +795,7 @@ interface Branch {
   phone: string;
   license: string;
   organizationId: string;
-  isActive: boolean;
   createdAt: Date;
-  updatedAt: Date;
-}
-```
-
-#### 7.1.3 User Profile
-
-```typescript
-interface UserProfile {
-  uid: string;
-  email: string;
-  name: string;
-  phone?: string;
-  organizationId: string;
-  role: "owner" | "manager" | "pharmacist" | "cashier" | "inventory_officer";
-  assignedBranches: string[];
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
 }
 ```
 
@@ -922,7 +817,7 @@ interface Product {
   manufacturer?: string;
   requiresPrescription: boolean;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }
 ```
 
@@ -957,8 +852,9 @@ interface Sale {
   subtotal: number;
   tax: number;
   total: number;
-  paymentMethod: "cash" | "mobile_money" | "card" | "corporate";
+  paymentMethod: "cash" | "mobile_money" | "card";
   status: "completed" | "void" | "refunded";
+  receiptNumber: string;
   createdAt: Date;
 }
 
@@ -972,125 +868,295 @@ interface SaleItem {
 }
 ```
 
+#### 7.1.7 Invite
+
+```typescript
+interface Invite {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: UserRole;
+  assignedOutletIds: string[];
+  status: "pending" | "accepted" | "expired";
+  inviteToken: string;
+  invitedBy: string;
+  createdAt: Date;
+  expiresAt: Date;
+  acceptedAt?: Date;
+}
+```
+
 ### 7.2 Data Validation Rules
 
-**VAL-001**: All monetary values shall be stored as positive decimals with 2 decimal places.
+**VAL-001**: Monetary values stored as positive numbers.
 
-**VAL-002**: All dates shall be stored as Firebase Timestamps.
+**VAL-002**: Dates stored as Firebase Timestamps.
 
-**VAL-003**: Email addresses shall be validated using RFC 5322 format.
+**VAL-003**: Email addresses validated using standard format.
 
-**VAL-004**: Phone numbers shall accept international formats.
+**VAL-004**: Phone numbers accept international formats.
 
-**VAL-005**: SKU and barcode shall be unique within an organization.
+**VAL-005**: SKU and barcode unique within an organization.
 
-**VAL-006**: Stock quantities shall be non-negative integers.
+**VAL-006**: Stock quantities are non-negative integers.
 
-**VAL-007**: Expiry dates shall be validated to be in the future.
-
-### 7.3 Data Retention
-
-**RET-001**: Active data shall be retained indefinitely.
-
-**RET-002**: Soft-deleted records shall be retained for 90 days.
-
-**RET-003**: Audit logs shall be retained for 7 years.
-
-**RET-004**: Backup data shall be retained for 30 days.
+**VAL-007**: Invitation tokens are 64-character hex strings (32 random bytes).
 
 ---
 
 ## 8. User Roles and Permissions
 
-### 8.1 Role Definitions
+### 8.1 Permission Matrix
 
 | Feature | Owner | Manager | Pharmacist | Cashier | Inventory Officer |
 |---------|-------|---------|------------|---------|-------------------|
-| **Dashboard** | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **View Inventory** | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **Add/Edit Products** | ✓ | ✓ | ✓ | - | ✓ |
-| **Delete Products** | ✓ | ✓ | - | - | - |
-| **Add Stock** | ✓ | ✓ | ✓ | - | ✓ |
-| **Adjust Stock** | ✓ | ✓ | - | - | ✓ |
-| **View POS** | ✓ | ✓ | ✓ | ✓ | - |
-| **Process Sales** | ✓ | ✓ | ✓ | ✓ | - |
-| **Void Transactions** | ✓ | ✓ | - | - | - |
-| **View Outlets** | ✓ | ✓ | - | - | - |
-| **Add/Edit Outlets** | ✓ | ✓ | - | - | - |
-| **View Staff** | ✓ | ✓ | - | - | - |
-| **Add/Edit Staff** | ✓ | ✓ | - | - | - |
-| **Delete Staff** | ✓ | - | - | - | - |
-| **View Reports** | ✓ | ✓ | ✓ | - | - |
-| **Export Reports** | ✓ | ✓ | - | - | - |
-| **Organization Settings** | ✓ | - | - | - | - |
-| **Billing** | ✓ | - | - | - | - |
+| **Dashboard** | Yes | Yes | Yes | Yes | Yes |
+| **View Inventory** | Yes | Yes | Yes | Yes | Yes |
+| **Add/Edit Products** | Yes | Yes | Yes | No | Yes |
+| **Delete Products** | Yes | Yes | No | No | No |
+| **Add Stock** | Yes | Yes | Yes | No | Yes |
+| **View POS** | Yes | Yes | Yes | Yes | No |
+| **Process Sales** | Yes | Yes | Yes | Yes | No |
+| **Void Transactions** | Yes | Yes | No | No | No |
+| **View Outlets** | Yes | Yes | No | No | No |
+| **Add/Edit Outlets** | Yes | Yes | No | No | No |
+| **View Staff** | Yes | Yes | No | No | No |
+| **Invite Staff** | Yes | Yes | No | No | No |
+| **Delete Staff** | Yes | No | No | No | No |
+| **View Reports** | Yes | Yes | Yes | No | No |
+| **Organization Settings** | Yes | Yes | No | No | No |
+| **Billing** | Yes | No | No | No | No |
 
-### 8.2 Permission Enforcement
+### 8.2 Enforcement
 
-**PERM-001**: Permissions shall be enforced at both frontend and backend levels.
+**PERM-001**: Sidebar navigation items are filtered by role (PAGE_ROLES constant).
 
-**PERM-002**: Unauthorized access attempts shall be logged.
+**PERM-002**: Page-level RoleGuard component blocks unauthorized access with "Access Restricted" message.
 
-**PERM-003**: UI shall hide features not accessible to current role.
+**PERM-003**: Firestore security rules enforce role checks on read/write operations.
 
-**PERM-004**: API requests shall verify user role before processing.
+**PERM-004**: UI hides action buttons (edit, delete, invite) for roles without permission.
 
 ---
 
-## 9. Appendices
+## 9. Global Market Strategy
 
-### 9.1 Glossary
+### 9.1 Target Markets (Priority Order)
 
-**Batch Number**: Unique identifier for a group of products from the same manufacturing run.
+| Tier | Markets | Currency | Tax System | Rationale |
+|------|---------|----------|------------|-----------|
+| **Tier 1** | Uganda, Kenya, Tanzania, Nigeria, Ghana | UGX, KES, TZS, NGN, GHS | VAT 16-18% | Home market, high demand, low competition |
+| **Tier 2** | India, Pakistan, Bangladesh, Philippines | INR, PKR, BDT, PHP | GST/VAT varies | Massive pharmacy density, price-sensitive |
+| **Tier 3** | South Africa, Egypt, Senegal (francophone Africa) | ZAR, EGP, XOF | VAT varies | Regional expansion, multi-language need |
+| **Tier 4** | UK, EU, USA, Canada, Australia | GBP, EUR, USD, CAD, AUD | VAT/GST/Sales Tax | Premium pricing, strict compliance |
+| **Tier 5** | UAE, Saudi Arabia, Qatar | AED, SAR, QAR | VAT 5-15% | High purchasing power, fast digitization |
 
-**FIFO**: First In, First Out - inventory valuation method where oldest stock is sold first.
+### 9.2 Currency Support
 
-**Multi-Tenant**: Architecture allowing multiple organizations to use the system with isolated data.
+The system supports 30+ currencies organized by region, covering all Tier 1-5 markets. Currency is configurable per organization during onboarding and in settings.
 
-**Soft Delete**: Marking records as deleted without physically removing them from database.
+### 9.3 Tax Configurability
 
-**SKU**: Stock Keeping Unit - unique identifier for a product.
+- Tax rate is a configurable decimal per organization (not hardcoded)
+- Supports VAT, GST, Sales Tax, and zero-rated scenarios
+- Tax-exempt products planned for Phase 2
 
-### 9.2 Development Phases
+### 9.4 Internationalization Roadmap
 
-#### Phase 1: MVP (Current)
-- ✅ Authentication and authorization
-- ✅ Organization onboarding
-- ✅ Dashboard
-- ✅ Inventory management
-- ✅ Outlet management
-- ✅ Staff management
-- ✅ Settings pages
-- 🔄 POS (UI complete, needs backend)
-- 🔄 Basic reports
+- Phase 1 (current): English UI, multi-currency, configurable tax
+- Phase 2: French language pack (francophone Africa)
+- Phase 3: Hindi, Swahili, Arabic language packs
+- Phase 4: RTL layout support (Arabic)
+
+---
+
+## 10. Monetization & Business Model
+
+### 10.1 Pricing Tiers
+
+| Plan | Price | Outlets | Staff | Key Features |
+|------|-------|---------|-------|-------------|
+| **Starter** | Free forever | 1 | 3 | Basic POS, inventory, email support |
+| **Professional** | $29/month | Up to 10 | 25 | Advanced reports, receipt customization, procurement, priority support |
+| **Enterprise** | Custom | Unlimited | Unlimited | AI modules, API access, dedicated account manager, SLA, custom data residency |
+
+### 10.2 Revenue Model
+
+- **Freemium**: Free tier drives adoption; conversion to paid at growth inflection (>1 outlet or >3 staff)
+- **Seat-based upsell**: Additional staff beyond plan limits
+- **Feature-gated upsell**: AI modules, advanced reports, API access
+- **Annual discount**: 20% discount for annual billing
+
+### 10.3 Key Metrics
+
+- MRR (Monthly Recurring Revenue)
+- Free-to-paid conversion rate (target: 8-12%)
+- Net revenue retention (target: >110%)
+- Time to first value (target: <5 minutes)
+- Churn rate (target: <5% monthly)
+
+---
+
+## 11. Compliance & Data Governance
+
+### 11.1 GDPR Compliance (EU Markets)
+
+- **Right to Access**: Users can view all their data via profile and settings pages
+- **Right to Delete**: Self-service account and data deletion (planned Phase 2)
+- **Data Export**: CSV/PDF export of all user data (planned Phase 2)
+- **Consent Management**: Explicit consent during registration
+- **Data Residency**: Firestore region selection per organization (Enterprise plan)
+
+### 11.2 Pharmacy Regulations
+
+- License number tracking per branch
+- Prescription-required product flagging
+- Batch-level traceability for audits
+- Expiry date tracking with automated warnings
+
+### 11.3 Financial Compliance
+
+- Tax calculation per sale with configurable rates
+- Sale records with receipt numbers for tax reporting
+- Audit trail for all financial transactions (planned Phase 2)
+
+### 11.4 Data Security
+
+- Firebase Authentication (industry-standard identity management)
+- Firestore data isolation per organization (multi-tenant security)
+- Encrypted data at rest and in transit
+- Role-based access control at UI and database levels
+- Secure invitation tokens with automatic expiry
+
+---
+
+## 12. Competitive Differentiation
+
+### 12.1 Market Position
+
+AIPharmacy differentiates from existing pharmacy management solutions through:
+
+| Differentiator | AIPharmacy | Traditional PMS | Generic Retail POS |
+|----------------|-----------|----------------|-------------------|
+| **Multi-tenant SaaS** | Yes — cloud-native, zero install | Often desktop-installed | Varies |
+| **Multi-outlet from Day 1** | Yes — branch management built-in | Usually single-outlet | Usually single-outlet |
+| **Pharmacy-specific** | Batch tracking, expiry alerts, prescription flags, drug interactions | Yes | No |
+| **Global currency/tax** | 30+ currencies, configurable tax | Usually single-market | Usually single-market |
+| **AI capabilities** | Demand forecasting, drug interactions, fraud detection (roadmap) | Rarely | No |
+| **Self-service onboarding** | < 5 minutes, no credit card | Requires consultant/training | Varies |
+| **Free tier** | Yes | Rarely | Sometimes |
+| **Multi-org membership** | Yes — one user, many organizations | No | No |
+
+### 12.2 Key Competitors
+
+- **mPharma** (Africa): Supply chain focused, not SaaS POS
+- **PharmEasy** (India): Consumer-facing, not B2B management
+- **McKesson/Oracle** (Enterprise): Very expensive, requires IT teams
+- **Square/Shopify POS** (Generic): No pharmacy-specific features
+
+### 12.3 Moat
+
+- Pharmacy-specific data model (batches, expiry, prescriptions)
+- Multi-tenant multi-org architecture (network effects as chains scale)
+- AI layer built on pharmacy transaction data (defensible over time)
+- Free tier for adoption in price-sensitive emerging markets
+
+---
+
+## 13. Appendices
+
+### 13.1 Glossary
+
+**Batch Number**: Unique identifier for products from the same manufacturing run.
+
+**FIFO**: First In, First Out — inventory method where oldest stock is sold first.
+
+**Multi-Tenant**: Architecture allowing multiple organizations with isolated data.
+
+**Soft Delete**: Marking records as inactive without physical deletion.
+
+**SKU**: Stock Keeping Unit — unique product identifier.
+
+**RoleGuard**: React component that restricts page access based on user role.
+
+### 13.2 Development Phases
+
+#### Phase 1: MVP (Current — v0.2)
+- [x] Authentication with multi-org support
+- [x] Self-service onboarding (2-step wizard)
+- [x] Password reset flow
+- [x] Public landing page with pricing
+- [x] Dashboard (UI complete, real data integration in progress)
+- [x] Inventory management (product + stock batch CRUD)
+- [x] Outlet management
+- [x] Staff management with email invitations
+- [x] POS UI (cart, search, tax calculation)
+- [x] Settings with real persistence (org, profile)
+- [x] Role-based access enforcement (sidebar filtering + RoleGuard)
+- [x] Real outlet selector in header
+- [x] Logout button with real user info in sidebar
+- [x] Help/Support and Feedback links
+- [x] Global currency support (30+ currencies)
+- [ ] POS backend (sale recording, stock deduction) — in progress
+- [ ] Receipt generation — in progress
 
 #### Phase 2: Enhancement
-- Procurement module
-- Receipt generation and printing
-- Advanced reports and analytics
-- Email notifications
-- Activity logs
-- Shift scheduling
+- [ ] Procurement module (PR, PO, GRN)
+- [ ] Sales reports and analytics
+- [ ] Receipt generation and printing
+- [ ] Data export (CSV, PDF)
+- [ ] Activity/audit logging
+- [ ] Tax-exempt product support
+- [ ] Self-service account deletion (GDPR)
+- [ ] Subscription billing (Stripe/Flutterwave)
+- [ ] French language pack
 
-#### Phase 3: Advanced Features
-- AI demand forecasting
-- Drug interaction alerts
-- Mobile app (React Native)
-- Offline POS mode
-- Multi-currency support
-- Advanced payment integrations
+#### Phase 3: Advanced
+- [ ] AI demand forecasting
+- [ ] Drug interaction alerts at POS
+- [ ] Fraud detection
+- [ ] Offline POS mode (Service Worker + IndexedDB)
+- [ ] Mobile app (React Native)
+- [ ] Multi-language support (Hindi, Swahili, Arabic)
+- [ ] RTL layout support
 
-### 9.3 Change History
+#### Phase 4: Scale
+- [ ] Platform super admin dashboard
+- [ ] API access for integrations
+- [ ] Custom data residency (Enterprise)
+- [ ] Advanced analytics with cached reports
+
+### 13.3 Corrective Actions Taken (v1.0 → v2.0)
+
+| Issue | Critique | Action Taken |
+|-------|----------|-------------|
+| D1 | No landing page | Created public marketing page with hero, features, pricing, testimonials, CTA |
+| D2 | Hardcoded currency (UGX) | Expanded to 30+ currencies organized by region |
+| D7 | No role-based access enforcement | Created RoleGuard component and role-filtered sidebar navigation |
+| D8 | Sidebar shows hardcoded "Admin User" | Sidebar now displays real user name, initials, and role |
+| D9 | No logout button | Added functional logout button to sidebar |
+| D10 | Outlet selector hardcoded | Wired outlet selector to real branches from OrganizationContext |
+| S1 | No password reset | Created /auth/reset-password page with Firebase integration |
+| S3 | No help/support links | Added Help & Support and Send Feedback links to sidebar |
+| S6 | No feedback channel | Added feedback email link in sidebar |
+| B1 | No pricing/monetization | Defined 3-tier pricing model (Starter/Professional/Enterprise) on landing page and in SRS |
+| B2 | No competitive differentiation | Added Section 12 with competitor analysis and moat definition |
+| B3 | No compliance strategy | Added Section 11 with GDPR, pharmacy regulation, and financial compliance plans |
+| B5 | SRS version stale | Rewrote SRS to v2.0 with current tech stack, architecture, and all changes reflected |
+| Settings | Save button was a no-op | Settings now persist to Firestore with success/error feedback |
+
+### 13.4 Change History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-12-06 | Development Team | Initial SRS document |
+| 2.0 | 2026-06-27 | Development Team | Major revision: added landing page, password reset, role-based access, global currency support, real outlet selector, sidebar user info & logout, settings persistence. Added sections 9-12 (market strategy, monetization, compliance, competitive differentiation). Updated all sections to reflect current architecture (Next.js 16, React 19, TypeScript 5.9). |
 
 ---
 
-**Document Status:** Draft
-**Next Review Date:** 2025-12-20
-**Approval Required From:** Project Manager, Lead Developer, Product Owner
+**Document Status:** Active
+**Next Review Date:** 2026-09-01
+**Approval Required From:** Product Owner, Lead Developer, Business Lead
 
 ---
 

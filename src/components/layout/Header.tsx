@@ -1,9 +1,12 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, MapPin } from "lucide-react";
 import OrganizationSelector from "@/components/OrganizationSelector";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 export default function Header() {
+  const { branches, selectedBranch, setSelectedBranch } = useOrganization();
+
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6 shadow-sm">
       {/* Search */}
@@ -20,7 +23,6 @@ export default function Header() {
 
       {/* Right Section */}
       <div className="flex items-center gap-4">
-        {/* Organization Selector - Only shows if user has multiple orgs */}
         <OrganizationSelector />
 
         {/* Notifications */}
@@ -29,12 +31,27 @@ export default function Header() {
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500"></span>
         </button>
 
-        {/* Outlet Selector */}
-        <select className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20">
-          <option>Main Branch</option>
-          <option>Downtown Outlet</option>
-          <option>Westside Pharmacy</option>
-        </select>
+        {/* Outlet Selector — wired to real branches */}
+        {branches.length > 0 && (
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-gray-400" />
+            <select
+              value={selectedBranch?.id || "all"}
+              onChange={(e) => {
+                const branch = branches.find((b) => b.id === e.target.value);
+                setSelectedBranch(branch || null);
+              }}
+              className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            >
+              <option value="all">All Outlets</option>
+              {branches.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
     </header>
   );

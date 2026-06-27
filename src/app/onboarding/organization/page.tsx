@@ -126,12 +126,50 @@ export default function OrganizationSetupPage() {
                   required
                   className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 >
-                  <option value="UGX">UGX - Ugandan Shilling</option>
-                  <option value="USD">USD - US Dollar</option>
-                  <option value="EUR">EUR - Euro</option>
-                  <option value="GBP">GBP - British Pound</option>
-                  <option value="KES">KES - Kenyan Shilling</option>
-                  <option value="TZS">TZS - Tanzanian Shilling</option>
+                  <optgroup label="Africa">
+                    <option value="UGX">UGX - Ugandan Shilling</option>
+                    <option value="KES">KES - Kenyan Shilling</option>
+                    <option value="TZS">TZS - Tanzanian Shilling</option>
+                    <option value="NGN">NGN - Nigerian Naira</option>
+                    <option value="GHS">GHS - Ghanaian Cedi</option>
+                    <option value="ZAR">ZAR - South African Rand</option>
+                    <option value="EGP">EGP - Egyptian Pound</option>
+                    <option value="XOF">XOF - West African CFA Franc</option>
+                    <option value="XAF">XAF - Central African CFA Franc</option>
+                    <option value="RWF">RWF - Rwandan Franc</option>
+                    <option value="ETB">ETB - Ethiopian Birr</option>
+                  </optgroup>
+                  <optgroup label="Americas">
+                    <option value="USD">USD - US Dollar</option>
+                    <option value="CAD">CAD - Canadian Dollar</option>
+                    <option value="BRL">BRL - Brazilian Real</option>
+                    <option value="MXN">MXN - Mexican Peso</option>
+                    <option value="COP">COP - Colombian Peso</option>
+                  </optgroup>
+                  <optgroup label="Europe">
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="GBP">GBP - British Pound</option>
+                    <option value="CHF">CHF - Swiss Franc</option>
+                    <option value="SEK">SEK - Swedish Krona</option>
+                    <option value="PLN">PLN - Polish Zloty</option>
+                  </optgroup>
+                  <optgroup label="Asia & Pacific">
+                    <option value="INR">INR - Indian Rupee</option>
+                    <option value="PKR">PKR - Pakistani Rupee</option>
+                    <option value="BDT">BDT - Bangladeshi Taka</option>
+                    <option value="PHP">PHP - Philippine Peso</option>
+                    <option value="MYR">MYR - Malaysian Ringgit</option>
+                    <option value="SGD">SGD - Singapore Dollar</option>
+                    <option value="AUD">AUD - Australian Dollar</option>
+                    <option value="NZD">NZD - New Zealand Dollar</option>
+                    <option value="JPY">JPY - Japanese Yen</option>
+                    <option value="CNY">CNY - Chinese Yuan</option>
+                  </optgroup>
+                  <optgroup label="Middle East">
+                    <option value="AED">AED - UAE Dirham</option>
+                    <option value="SAR">SAR - Saudi Riyal</option>
+                    <option value="QAR">QAR - Qatari Riyal</option>
+                  </optgroup>
                 </select>
               </div>
             </div>
