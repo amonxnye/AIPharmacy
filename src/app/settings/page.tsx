@@ -64,7 +64,7 @@ export default function SettingsPage() {
         name: organization.name || "",
         logo: organization.logo || "",
         currency: organization.currency || "UGX",
-        taxRate: organization.taxRate || 0,
+        taxRate: organization.taxRate < 1 ? Math.round(organization.taxRate * 100 * 100) / 100 : organization.taxRate,
         address: "",
         phone: "",
         email: "",
@@ -91,7 +91,7 @@ export default function SettingsPage() {
         await organizationService.update(organization.id, {
           name: orgSettings.name,
           currency: orgSettings.currency,
-          taxRate: orgSettings.taxRate,
+          taxRate: orgSettings.taxRate / 100,
           email: orgSettings.email,
           phone: orgSettings.phone,
           address: orgSettings.address,

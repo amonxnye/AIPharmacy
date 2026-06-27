@@ -1,0 +1,99 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: check if the user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: check if the user owns this document
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // Helper: get user's membership for an organization
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Helper: check if user has a membership in the given org
+    function isMemberOfOrg(orgId) {
+      let userData = getUserData();
+      return userData.memberships != null;
+    }
+
+    // Helper: check if user is org owner
+    function isOrgOwner(orgId) {
+      let orgData = get(/databases/$(database)/documents/organizations/$(orgId)).data;
+      return isAuth() && orgData.ownerId == request.auth.uid;
+    }
+
+    // Users collection - global user profiles
+    match /users/{userId} {
+      allow read: if isAuth() && request.auth.uid == userId;
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow update: if isAuth() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Organizations collection
+    match /organizations/{orgId} {
+      allow read: if isAuth() && isMemberOfOrg(orgId);
+      allow create: if isAuth();
+      allow update: if isAuth() && isOrgOwner(orgId);
+      allow delete: if isAuth() && isOrgOwner(orgId);
+
+      // Branches subcollection
+      match /branches/{branchId} {
+        allow read: if isAuth() && isMemberOfOrg(orgId);
+        allow write: if isAuth() && isOrgOwner(orgId);
+      }
+
+      // Products subcollection
+      match /products/{productId} {
+        allow read: if isAuth() && isMemberOfOrg(orgId);
+        allow create: if isAuth() && isMemberOfOrg(orgId);
+        allow update: if isAuth() && isMemberOfOrg(orgId);
+        allow delete: if isAuth() && isOrgOwner(orgId);
+      }
+
+      // Stock subcollection
+      match /stock/{stockId} {
+        allow read: if isAuth() && isMemberOfOrg(orgId);
+        allow write: if isAuth() && isMemberOfOrg(orgId);
+      }
+
+      // Staff subcollection
+      match /staff/{staffId} {
+        allow read: if isAuth() && isMemberOfOrg(orgId);
+        allow write: if isAuth() && isOrgOwner(orgId);
+      }
+
+      // Organization-specific user profiles
+      match /users/{userId} {
+        allow read: if isAuth() && isMemberOfOrg(orgId);
+        allow create: if isAuth();
+        allow update: if isAuth() && (isOrgOwner(orgId) || request.auth.uid == userId);
+        allow delete: if isAuth() && isOrgOwner(orgId);
+      }
+
+      // Invites subcollection
+      match /invites/{inviteId} {
+        allow read: if isAuth();
+        allow create: if isAuth() && isOrgOwner(orgId);
+        allow update: if isAuth();
+        allow delete: if isAuth() && isOrgOwner(orgId);
+      }
+
+      // Sales subcollection
+      match /sales/{saleId} {
+        allow read: if isAuth() && isMemberOfOrg(orgId);
+        allow create: if isAuth() && isMemberOfOrg(orgId);
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+  }
+}

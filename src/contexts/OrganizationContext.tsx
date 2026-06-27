@@ -15,7 +15,7 @@ interface Organization {
   createdAt: Date;
 }
 
-interface Branch {
+export interface Branch {
   id: string;
   name: string;
   address: string;
@@ -92,12 +92,15 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
+    let cancelled = false;
+    const orgId = userProfile?.organizationId;
+
     const loadData = async () => {
-      if (userProfile?.organizationId) {
+      if (orgId) {
         setLoading(true);
-        await loadOrganization(userProfile.organizationId);
-        await loadBranches(userProfile.organizationId);
-        setLoading(false);
+        await loadOrganization(orgId);
+        if (!cancelled) await loadBranches(orgId);
+        if (!cancelled) setLoading(false);
       } else {
         setOrganization(null);
         setBranches([]);
@@ -107,6 +110,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     };
 
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userProfile?.organizationId]);
 
   const refreshOrganization = async () => {

@@ -1,14 +1,16 @@
-import { 
+import {
   collection,
-  doc, 
-  getDoc, 
+  doc,
+  getDoc,
   getDocs,
-  setDoc, 
-  updateDoc, 
+  setDoc,
+  updateDoc,
   deleteDoc,
   serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { userService } from "./userService";
+import type { Membership } from "@/types/user";
 
 export type StaffRole = "owner" | "manager" | "pharmacist" | "cashier" | "inventory_officer";
 
@@ -40,11 +42,11 @@ export const staffService = {
       createdAt: serverTimestamp(),
     });
 
-    // Also update the user's profile
-    await updateDoc(doc(db, "users", data.userId), {
+    await userService.addMembership(data.userId, {
       organizationId,
       role: data.role,
-      assignedBranches: data.assignedBranches,
+      assignedOutletIds: data.assignedBranches,
+      joinedAt: new Date(),
     });
 
     return staffRef.id;
@@ -53,11 +55,11 @@ export const staffService = {
   async getAll(organizationId: string): Promise<StaffMember[]> {
     const staffRef = collection(db, "organizations", organizationId, "staff");
     const snapshot = await getDocs(staffRef);
-    
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
+
+    return snapshot.docs.map((staffDoc) => {
+      const data = staffDoc.data();
       return {
-        id: doc.id,
+        id: staffDoc.id,
         userId: data.userId,
         name: data.name,
         email: data.email,
@@ -73,7 +75,7 @@ export const staffService = {
     const staffDoc = await getDoc(
       doc(db, "organizations", organizationId, "staff", staffId)
     );
-    
+
     if (!staffDoc.exists()) return null;
 
     const data = staffDoc.data();
@@ -90,8 +92,8 @@ export const staffService = {
   },
 
   async update(
-    organizationId: string, 
-    staffId: string, 
+    organizationId: string,
+    staffId: string,
     userId: string,
     data: Partial<Omit<CreateStaffData, 'userId' | 'email'>>
   ): Promise<void> {
@@ -100,13 +102,12 @@ export const staffService = {
       data
     );
 
-    // Also update the user's profile
-    const updateData: any = {};
-    if (data.role) updateData.role = data.role;
-    if (data.assignedBranches) updateData.assignedBranches = data.assignedBranches;
-    
-    if (Object.keys(updateData).length > 0) {
-      await updateDoc(doc(db, "users", userId), updateData);
+    const membershipUpdates: Partial<Membership> = {};
+    if (data.role) membershipUpdates.role = data.role;
+    if (data.assignedBranches) membershipUpdates.assignedOutletIds = data.assignedBranches;
+
+    if (Object.keys(membershipUpdates).length > 0) {
+      await userService.updateMembership(userId, organizationId, membershipUpdates);
     }
   },
 
@@ -115,11 +116,6 @@ export const staffService = {
       doc(db, "organizations", organizationId, "staff", staffId)
     );
 
-    // Remove organization from user profile
-    await updateDoc(doc(db, "users", userId), {
-      organizationId: "",
-      role: "owner",
-      assignedBranches: [],
-    });
+    await userService.removeMembership(userId, organizationId);
   },
 };

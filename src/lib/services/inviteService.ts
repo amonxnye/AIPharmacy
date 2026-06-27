@@ -168,16 +168,23 @@ export const inviteService = {
     });
   },
 
-  // Check if invite is valid
   isInviteValid(invite: Invite): { valid: boolean; reason?: string } {
     if (invite.status !== "pending") {
       return { valid: false, reason: "Invite has already been used or expired" };
     }
 
-    if (invite.expiresAt < new Date()) {
+    const expiresAt = invite.expiresAt instanceof Date
+      ? invite.expiresAt
+      : new Date(invite.expiresAt);
+
+    if (isNaN(expiresAt.getTime()) || expiresAt < new Date()) {
       return { valid: false, reason: "Invite has expired" };
     }
 
     return { valid: true };
+  },
+
+  isValidTokenFormat(token: string): boolean {
+    return /^[a-f0-9]{64}$/.test(token);
   },
 };

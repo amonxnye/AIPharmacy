@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  deleteUser,
   UserCredential
 } from "firebase/auth";
 import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.email,
           phone: data.phone,
           photoUrl: data.photoUrl,
-          memberships: data.memberships.map((m: any) => ({
+          memberships: data.memberships.map((m: { organizationId: string; role: UserRole; assignedOutletIds?: string[]; joinedAt?: { toDate: () => Date } }) => ({
             organizationId: m.organizationId,
             role: m.role,
             assignedOutletIds: m.assignedOutletIds || [],
@@ -183,17 +184,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        await loadUserProfile(user.uid);
+    let cancelled = false;
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (cancelled) return;
+
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        await loadUserProfile(firebaseUser.uid);
       } else {
         setUserProfile(null);
+        setGlobalProfile(null);
+        setCurrentOrgId(null);
+        setCurrentMembership(null);
+        setOrganizations([]);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -202,22 +214,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Create user profile in Firestore
-    await setDoc(doc(db, "users", userCredential.user.uid), {
-      email,
-      name,
-      createdAt: new Date(),
-      organizationId: "", // Will be set during onboarding
-      role: "owner",
-      assignedBranches: [],
-    });
+
+    try {
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email,
+        displayName: name,
+        name,
+        createdAt: new Date(),
+        organizationId: "",
+        role: "owner",
+        assignedBranches: [],
+      });
+    } catch (firestoreError) {
+      await deleteUser(userCredential.user);
+      throw firestoreError;
+    }
 
     return userCredential;
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
     setUserProfile(null);
     setGlobalProfile(null);
     setCurrentOrgId(null);
@@ -226,6 +242,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentOrgId");
     }
+    await firebaseSignOut(auth);
   };
 
   const switchOrganization = (orgId: string) => {

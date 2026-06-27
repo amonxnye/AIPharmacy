@@ -2,10 +2,10 @@
 
 ## AI-Pharmacy Multi-Tenant Outlet Management System
 
-**Version:** 2.0
+**Version:** 2.1
 **Date:** June 27, 2026
 **Status:** Active
-**Previous Version:** 1.0 (December 6, 2025)
+**Previous Version:** 2.0 (June 27, 2026)
 
 ---
 
@@ -1026,7 +1026,16 @@ The system supports 30+ currencies organized by region, covering all Tier 1-5 ma
 - Firestore data isolation per organization (multi-tenant security)
 - Encrypted data at rest and in transit
 - Role-based access control at UI and database levels
-- Secure invitation tokens with automatic expiry
+- Secure invitation tokens with automatic expiry (64-char hex, 7-day TTL)
+
+### 11.5 Security Hardening (v2.1)
+
+- **Firestore Security Rules**: Deployed `firestore.rules` enforcing per-collection read/write access by role and org membership. Sales are append-only (no update/delete).
+- **Signup Atomicity**: If Firestore profile creation fails after Firebase Auth user is created, the auth user is automatically deleted to prevent orphaned accounts.
+- **Input Sanitization**: `sanitize.ts` utility provides HTML escaping, email normalization, phone sanitization, and injection prevention for all user-facing inputs.
+- **Invite Token Validation**: Token format verified (64-char hex) before database lookup to prevent unnecessary queries.
+- **Error Boundary**: Global React ErrorBoundary catches unhandled render errors, prevents white-screen crashes, and provides recovery UI.
+- **State Cleanup on Auth Changes**: `onAuthStateChanged` uses cancellation flags to prevent stale async updates from overwriting newer state.
 
 ---
 
@@ -1081,7 +1090,7 @@ AIPharmacy differentiates from existing pharmacy management solutions through:
 
 ### 13.2 Development Phases
 
-#### Phase 1: MVP (Current — v0.2)
+#### Phase 1: MVP (Current — v0.3)
 - [x] Authentication with multi-org support
 - [x] Self-service onboarding (2-step wizard)
 - [x] Password reset flow
@@ -1097,6 +1106,15 @@ AIPharmacy differentiates from existing pharmacy management solutions through:
 - [x] Logout button with real user info in sidebar
 - [x] Help/Support and Feedback links
 - [x] Global currency support (30+ currencies)
+- [x] Firestore security rules (firestore.rules)
+- [x] Global error boundary with recovery UI
+- [x] Input sanitization utility
+- [x] Signup atomicity (rollback on Firestore failure)
+- [x] Invite flow hardening (duplicate check, partial-failure rollback, token validation)
+- [x] Tax rate consistency (stored as decimal, displayed as percentage)
+- [x] Staff service multi-org compatibility
+- [x] Race condition fixes (OrganizationContext, AuthContext)
+- [x] ProtectedRoute loading state fix (no flash of content)
 - [ ] POS backend (sale recording, stock deduction) — in progress
 - [ ] Receipt generation — in progress
 
@@ -1145,12 +1163,49 @@ AIPharmacy differentiates from existing pharmacy management solutions through:
 | B5 | SRS version stale | Rewrote SRS to v2.0 with current tech stack, architecture, and all changes reflected |
 | Settings | Save button was a no-op | Settings now persist to Firestore with success/error feedback |
 
-### 13.4 Change History
+### 13.4 Stability & Security Fixes (v2.0 → v2.1)
+
+| Area | Issue | Fix |
+|------|-------|-----|
+| Auth | Signup creates Firebase user but Firestore profile can fail, leaving orphaned auth account | Added try-catch: if `setDoc` fails, `deleteUser` rolls back the Firebase auth user |
+| Auth | `onAuthStateChanged` callback can set stale state if component unmounts or auth changes rapidly | Added cancellation flag in useEffect cleanup |
+| Auth | Logout clears state after `firebaseSignOut`, racing with `onAuthStateChanged` callback | State cleared before `firebaseSignOut` call |
+| Auth | `any` type in memberships mapping | Replaced with explicit Firestore field types |
+| Invite | No check for existing membership before accepting invite | Added `getOrgUserProfile` check before acceptance |
+| Invite | Multi-step invite acceptance (addMembership + createOrgUserProfile + acceptInvite) can partially fail | Added rollback: if org profile creation fails, membership is removed |
+| Invite | Token format not validated before database lookup | Added `isValidTokenFormat` (64-char hex check) |
+| Invite | `expiresAt` comparison may fail if Firestore Timestamp not converted to Date | Added safe Date conversion with `isNaN` guard |
+| Settings | Tax rate stored as decimal (0.18) but displayed and saved as integer (18), causing data corruption | Settings now converts: multiply by 100 on load, divide by 100 on save |
+| Staff | `staffService.create/update/delete` writes legacy flat fields to user doc, breaking multi-org users | Rewritten to use `userService.addMembership/updateMembership/removeMembership` |
+| OrgContext | Race condition: if `organizationId` changes during async load, stale data overwrites new org | Added cancellation flag in useEffect |
+| OrgContext | `Branch` interface not exported, causing TypeScript error in outlets page | Exported `Branch` interface |
+| ProtectedRoute | Returns `null` during redirect, causing brief flash of missing content | Shows loading spinner during redirect |
+| Global | No error boundary — unhandled render errors cause white screen | Added `ErrorBoundary` component wrapping root layout |
+| Global | No Firestore security rules in repository | Created `firestore.rules` with per-collection access control |
+| Global | No input sanitization | Created `sanitize.ts` with HTML escaping, email/phone sanitization |
+
+### 13.5 Next Features Roadmap (v2.2+)
+
+| Feature | Priority | Description |
+|---------|----------|-------------|
+| **Data Export** | High | CSV and PDF export for inventory, sales, and staff data. Required for GDPR Right to Access. |
+| **Audit Logging** | High | Record all create/update/delete operations with user, timestamp, and previous values. Essential for pharmacy compliance. |
+| **Receipt Generation** | High | Generate printable/downloadable receipts from completed sales. Thermal printer format support. |
+| **Offline POS Mode** | Medium | Service Worker + IndexedDB for offline sale processing. Sync when reconnected. Critical for markets with unreliable internet. |
+| **Sales Analytics Dashboard** | Medium | Revenue trends, top-selling products, peak hours, per-branch comparison. Filter by date range. |
+| **Subscription Billing** | Medium | Stripe (international) + Flutterwave (Africa) integration for Professional/Enterprise plan billing. |
+| **Low Stock Alerts** | Medium | Email/in-app notifications when stock falls below configurable threshold per product. |
+| **Expiry Alerts** | Medium | Automated alerts for products expiring within 30/60/90 days. Dashboard widget. |
+| **Drug Interaction Checker** | Low | AI-powered drug interaction warnings during POS checkout when multiple medications are sold together. |
+| **Multi-language Support** | Low | i18n framework with French (Phase 2), Hindi, Swahili, Arabic (Phase 3). RTL layout for Arabic. |
+
+### 13.6 Change History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0 | 2025-12-06 | Development Team | Initial SRS document |
 | 2.0 | 2026-06-27 | Development Team | Major revision: added landing page, password reset, role-based access, global currency support, real outlet selector, sidebar user info & logout, settings persistence. Added sections 9-12 (market strategy, monetization, compliance, competitive differentiation). Updated all sections to reflect current architecture (Next.js 16, React 19, TypeScript 5.9). |
+| 2.1 | 2026-06-27 | Development Team | Stability & security hardening: fixed signup atomicity, invite flow rollback, tax rate consistency, staff service multi-org support, race conditions in contexts. Added error boundary, Firestore security rules, input sanitization. Added sections 11.5, 13.4, 13.5 (security hardening, stability fixes, next features roadmap). Bumped to v0.3. |
 
 ---
 

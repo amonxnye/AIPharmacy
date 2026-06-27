@@ -49,6 +49,12 @@ export default function AcceptInvitePage() {
       return;
     }
 
+    if (!inviteService.isValidTokenFormat(token)) {
+      setError("Invalid invitation link. The token format is incorrect.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await inviteService.getInviteByToken(token);
 
@@ -100,7 +106,15 @@ export default function AcceptInvitePage() {
     setError(null);
 
     try {
-      // Create or update user's membership
+      // Check if user is already a member of this organization
+      const existingProfile = await userService.getOrgUserProfile(orgId, user.uid);
+      if (existingProfile) {
+        setError("You are already a member of this organization.");
+        setAccepting(false);
+        return;
+      }
+
+      // Step 1: Add membership to global profile
       await userService.addMembership(user.uid, {
         organizationId: orgId,
         role: invite.role,
@@ -108,27 +122,30 @@ export default function AcceptInvitePage() {
         joinedAt: new Date(),
       });
 
-      // Create organization-specific user profile
-      await userService.createOrgUserProfile(orgId, {
-        userId: user.uid,
-        email: user.email || invite.email,
-        name: user.displayName || user.email?.split("@")[0] || "User",
-        role: invite.role,
-        assignedOutletIds: invite.assignedOutletIds,
-        status: "active",
-        createdAt: new Date(),
-        invitedBy: invite.invitedBy,
-      });
+      // Step 2: Create organization-specific user profile
+      try {
+        await userService.createOrgUserProfile(orgId, {
+          userId: user.uid,
+          email: user.email || invite.email,
+          name: user.displayName || user.email?.split("@")[0] || "User",
+          role: invite.role,
+          assignedOutletIds: invite.assignedOutletIds,
+          status: "active",
+          createdAt: new Date(),
+          invitedBy: invite.invitedBy,
+        });
+      } catch (orgProfileErr) {
+        // Rollback: remove the membership we just added
+        await userService.removeMembership(user.uid, orgId);
+        throw orgProfileErr;
+      }
 
-      // Mark invite as accepted
+      // Step 3: Mark invite as accepted
       await inviteService.acceptInvite(orgId, invite.id, user.uid);
 
-      // Refresh user profile to get new membership
       await refreshUserProfile();
-
       setSuccess(true);
 
-      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
