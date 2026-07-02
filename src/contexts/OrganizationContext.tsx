@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "./AuthContext";
 
@@ -12,6 +12,10 @@ interface Organization {
   currency: string;
   taxRate: number;
   ownerId: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  country?: string;
   createdAt: Date;
 }
 
@@ -56,6 +60,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
           currency: data.currency,
           taxRate: data.taxRate,
           ownerId: data.ownerId,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          country: data.country,
           createdAt: data.createdAt?.toDate() || new Date(),
         });
       }
@@ -81,11 +89,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         };
       });
       setBranches(branchesData);
-      
-      // Set first branch as selected if none selected
-      if (branchesData.length > 0 && !selectedBranch) {
-        setSelectedBranch(branchesData[0]);
-      }
+
+      // Keep a still-valid selection; otherwise default to the first branch.
+      setSelectedBranch((prev) =>
+        prev && branchesData.find((b) => b.id === prev.id)
+          ? prev
+          : branchesData[0] || null
+      );
     } catch (error) {
       console.error("Error loading branches:", error);
     }
@@ -98,6 +108,9 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const loadData = async () => {
       if (orgId) {
         setLoading(true);
+        // Clear any selection carried over from a previously active org so a
+        // branch-scoped action can't target another tenant's branch.
+        setSelectedBranch(null);
         await loadOrganization(orgId);
         if (!cancelled) await loadBranches(orgId);
         if (!cancelled) setLoading(false);

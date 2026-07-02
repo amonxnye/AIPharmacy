@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -26,29 +26,21 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
-  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        setRedirecting(true);
         router.replace("/auth/login");
       } else if (requireOrganization && !userProfile?.organizationId) {
-        setRedirecting(true);
         router.replace("/onboarding/organization");
       }
     }
   }, [user, userProfile, loading, requireOrganization, router]);
 
-  if (loading || redirecting) {
-    return <LoadingScreen />;
-  }
-
-  if (!user) {
-    return <LoadingScreen />;
-  }
-
-  if (requireOrganization && !userProfile?.organizationId) {
+  // Show the loading screen (not null) whenever we're not ready to render the
+  // protected content — including the brief window while a redirect is in
+  // flight — so there's no flash of missing content.
+  if (loading || !user || (requireOrganization && !userProfile?.organizationId)) {
     return <LoadingScreen />;
   }
 

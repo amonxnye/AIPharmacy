@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { organizationService } from "@/lib/services/organizationService";
+import { userService } from "@/lib/services/userService";
+import { getErrorMessage } from "@/lib/errors";
 import { Building2, DollarSign, Percent, AlertCircle } from "lucide-react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -25,7 +27,7 @@ export default function OrganizationSetupPage() {
     setLoading(true);
 
     try {
-      // Create organization
+      // Create organization (owner = current user)
       const orgId = await organizationService.create({
         name,
         currency,
@@ -33,18 +35,36 @@ export default function OrganizationSetupPage() {
         ownerId: user.uid,
       });
 
-      // Update user profile with organization ID
-      await updateDoc(doc(db, "users", user.uid), {
-        organizationId: orgId,
+      // Provision the owner's authoritative membership record. This org-side
+      // doc — not the client-writable memberships array — is what security
+      // rules use to authorize reads/writes of this org's data.
+      await userService.createOrgUserProfile(orgId, {
+        userId: user.uid,
+        email: user.email || "",
+        name: user.displayName || name,
+        role: "owner",
+        assignedOutletIds: [],
+        status: "active",
+        createdAt: new Date(),
       });
+
+      // Add a membership to the global profile (client convenience cache) and
+      // keep the legacy organizationId that OrganizationContext still reads.
+      await userService.addMembership(user.uid, {
+        organizationId: orgId,
+        role: "owner",
+        assignedOutletIds: [],
+        joinedAt: new Date(),
+      });
+      await updateDoc(doc(db, "users", user.uid), { organizationId: orgId });
 
       // Refresh user profile
       await refreshUserProfile();
 
       // Redirect to branch setup
       router.push("/onboarding/branch");
-    } catch (err: any) {
-      setError(err.message || "Failed to create organization. Please try again.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to create organization. Please try again."));
     } finally {
       setLoading(false);
     }

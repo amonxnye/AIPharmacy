@@ -1,10 +1,11 @@
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
-  updateDoc, 
+import {
+  collection,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
   deleteDoc,
-  serverTimestamp 
+  serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
@@ -36,8 +37,8 @@ export interface CreateOrganizationData {
 
 export const organizationService = {
   async create(data: CreateOrganizationData): Promise<string> {
-    const orgRef = doc(db, "organizations", `org_${Date.now()}`);
-    await setDoc(orgRef, {
+    // Auto-generated IDs avoid the collision/overwrite risk of Date.now().
+    const orgRef = await addDoc(collection(db, "organizations"), {
       ...data,
       createdAt: serverTimestamp(),
     });
@@ -56,6 +57,10 @@ export const organizationService = {
       currency: data.currency,
       taxRate: data.taxRate,
       ownerId: data.ownerId,
+      email: data.email,
+      phone: data.phone,
+      address: data.address,
+      country: data.country,
       createdAt: data.createdAt?.toDate() || new Date(),
     };
   },

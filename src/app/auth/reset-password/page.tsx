@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { getErrorCode } from "@/lib/errors";
 import { Mail, ArrowLeft, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function ResetPasswordPage() {
@@ -20,12 +21,13 @@ export default function ResetPasswordPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccess(true);
-    } catch (err: any) {
-      if (err.code === "auth/user-not-found") {
+    } catch (err) {
+      const code = getErrorCode(err);
+      if (code === "auth/user-not-found") {
         setError("No account found with this email address.");
-      } else if (err.code === "auth/invalid-email") {
+      } else if (code === "auth/invalid-email") {
         setError("Please enter a valid email address.");
-      } else if (err.code === "auth/too-many-requests") {
+      } else if (code === "auth/too-many-requests") {
         setError("Too many requests. Please try again later.");
       } else {
         setError("Failed to send reset email. Please try again.");

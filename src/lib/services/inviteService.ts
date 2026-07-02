@@ -5,6 +5,7 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
   serverTimestamp,
@@ -13,18 +14,21 @@ import {
 import { db } from "@/lib/firebase";
 import type { Invite, CreateInviteData } from "@/types/invite";
 
-// Generate a secure random token
+// Generate a secure random 64-char hex token (32 random bytes).
 function generateInviteToken(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export const inviteService = {
-  // Create a new invitation
+  // Create an invitation: writes both the org-scoped invite record and a
+  // top-level token-lookup doc so the invitee can resolve it without listing
+  // every organization.
   async createInvite(
     organizationId: string,
     invitedBy: string,
+    organizationName: string,
     data: CreateInviteData
   ): Promise<{ inviteId: string; inviteToken: string }> {
     const inviteToken = generateInviteToken();
@@ -32,159 +36,148 @@ export const inviteService = {
 
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const email = data.email.toLowerCase();
 
-    const inviteData = {
-      email: data.email.toLowerCase(),
+    await setDoc(inviteRef, {
+      email,
       role: data.role,
       assignedOutletIds: data.assignedOutletIds,
       status: "pending",
       inviteToken,
       invitedBy,
       createdAt: serverTimestamp(),
-      expiresAt,
-    };
+      expiresAt: Timestamp.fromDate(expiresAt),
+    });
 
-    await setDoc(inviteRef, inviteData);
-
-    return {
+    // Token-lookup doc (keyed by the secret token). Carries a copy of the
+    // fields the invitee needs so they never touch the protected subcollection.
+    await setDoc(doc(db, "inviteTokens", inviteToken), {
+      orgId: organizationId,
       inviteId: inviteRef.id,
-      inviteToken,
-    };
+      email,
+      role: data.role,
+      assignedOutletIds: data.assignedOutletIds,
+      organizationName,
+      status: "pending",
+      expiresAt: Timestamp.fromDate(expiresAt),
+      createdAt: serverTimestamp(),
+    });
+
+    return { inviteId: inviteRef.id, inviteToken };
   },
 
-  // Get invite by token
-  async getInviteByToken(token: string): Promise<{ invite: Invite; orgId: string } | null> {
+  // Resolve an invite from its token via a single get-by-id (no scan).
+  async getInviteByToken(
+    token: string
+  ): Promise<{ invite: Invite; orgId: string; organizationName: string } | null> {
     try {
-      // Search across all organizations (not ideal, but necessary without top-level invites collection)
-      // In production, consider a top-level invites collection with orgId reference
-      const orgsSnapshot = await getDocs(collection(db, "organizations"));
+      const tokenDoc = await getDoc(doc(db, "inviteTokens", token));
+      if (!tokenDoc.exists()) return null;
 
-      for (const orgDoc of orgsSnapshot.docs) {
-        const invitesRef = collection(db, "organizations", orgDoc.id, "invites");
-        const q = query(invitesRef, where("inviteToken", "==", token));
-        const inviteSnapshot = await getDocs(q);
-
-        if (!inviteSnapshot.empty) {
-          const inviteDoc = inviteSnapshot.docs[0];
-          const data = inviteDoc.data();
-
-          return {
-            invite: {
-              id: inviteDoc.id,
-              organizationId: orgDoc.id,
-              email: data.email,
-              role: data.role,
-              assignedOutletIds: data.assignedOutletIds || [],
-              status: data.status,
-              inviteToken: data.inviteToken,
-              invitedBy: data.invitedBy,
-              createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
-              expiresAt: (data.expiresAt as Timestamp)?.toDate() || new Date(),
-              acceptedAt: data.acceptedAt ? (data.acceptedAt as Timestamp).toDate() : undefined,
-              acceptedBy: data.acceptedBy,
-            },
-            orgId: orgDoc.id,
-          };
-        }
-      }
-
-      return null;
+      const t = tokenDoc.data();
+      return {
+        orgId: t.orgId,
+        organizationName: t.organizationName || "Organization",
+        invite: {
+          id: t.inviteId,
+          organizationId: t.orgId,
+          email: t.email,
+          role: t.role,
+          assignedOutletIds: t.assignedOutletIds || [],
+          status: t.status,
+          inviteToken: token,
+          invitedBy: t.invitedBy || "",
+          createdAt: (t.createdAt as Timestamp)?.toDate() || new Date(),
+          expiresAt: (t.expiresAt as Timestamp)?.toDate() || new Date(),
+        },
+      };
     } catch (error) {
       console.error("Error fetching invite by token:", error);
       return null;
     }
   },
 
-  // Get all invites for an organization
   async getInvites(organizationId: string): Promise<Invite[]> {
     const invitesRef = collection(db, "organizations", organizationId, "invites");
     const snapshot = await getDocs(invitesRef);
-
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        organizationId,
-        email: data.email,
-        role: data.role,
-        assignedOutletIds: data.assignedOutletIds || [],
-        status: data.status,
-        inviteToken: data.inviteToken,
-        invitedBy: data.invitedBy,
-        createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
-        expiresAt: (data.expiresAt as Timestamp)?.toDate() || new Date(),
-        acceptedAt: data.acceptedAt ? (data.acceptedAt as Timestamp).toDate() : undefined,
-        acceptedBy: data.acceptedBy,
-      };
-    });
+    return snapshot.docs.map((d) => mapInvite(d.id, organizationId, d.data()));
   },
 
-  // Get pending invites for an organization
   async getPendingInvites(organizationId: string): Promise<Invite[]> {
     const invitesRef = collection(db, "organizations", organizationId, "invites");
     const q = query(invitesRef, where("status", "==", "pending"));
     const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        organizationId,
-        email: data.email,
-        role: data.role,
-        assignedOutletIds: data.assignedOutletIds || [],
-        status: data.status,
-        inviteToken: data.inviteToken,
-        invitedBy: data.invitedBy,
-        createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
-        expiresAt: (data.expiresAt as Timestamp)?.toDate() || new Date(),
-        acceptedAt: data.acceptedAt ? (data.acceptedAt as Timestamp).toDate() : undefined,
-        acceptedBy: data.acceptedBy,
-      };
-    });
+    return snapshot.docs.map((d) => mapInvite(d.id, organizationId, d.data()));
   },
 
-  // Mark invite as accepted
+  // Mark an invite accepted on both the org record and the token-lookup doc.
   async acceptInvite(
     organizationId: string,
     inviteId: string,
+    inviteToken: string,
     userId: string
   ): Promise<void> {
-    const inviteRef = doc(db, "organizations", organizationId, "invites", inviteId);
-
-    await updateDoc(inviteRef, {
+    await updateDoc(doc(db, "organizations", organizationId, "invites", inviteId), {
       status: "accepted",
       acceptedAt: serverTimestamp(),
       acceptedBy: userId,
     });
-  },
-
-  // Mark invite as expired
-  async expireInvite(organizationId: string, inviteId: string): Promise<void> {
-    const inviteRef = doc(db, "organizations", organizationId, "invites", inviteId);
-
-    await updateDoc(inviteRef, {
-      status: "expired",
-    });
+    // Best-effort: invalidate the token so it can't be reused.
+    try {
+      await updateDoc(doc(db, "inviteTokens", inviteToken), { status: "accepted" });
+    } catch (err) {
+      console.error("Could not invalidate invite token:", err);
+    }
   },
 
   isInviteValid(invite: Invite): { valid: boolean; reason?: string } {
     if (invite.status !== "pending") {
-      return { valid: false, reason: "Invite has already been used or expired" };
+      return { valid: false, reason: "This invitation has already been used or revoked." };
     }
-
-    const expiresAt = invite.expiresAt instanceof Date
-      ? invite.expiresAt
-      : new Date(invite.expiresAt);
-
+    const expiresAt =
+      invite.expiresAt instanceof Date ? invite.expiresAt : new Date(invite.expiresAt);
     if (isNaN(expiresAt.getTime()) || expiresAt < new Date()) {
-      return { valid: false, reason: "Invite has expired" };
+      return { valid: false, reason: "This invitation has expired." };
     }
-
     return { valid: true };
   },
 
   isValidTokenFormat(token: string): boolean {
     return /^[a-f0-9]{64}$/.test(token);
   },
+
+  // Revoke a pending invite: remove both the org record and the token doc.
+  async revokeInvite(
+    organizationId: string,
+    inviteId: string,
+    inviteToken: string
+  ): Promise<void> {
+    await deleteDoc(doc(db, "organizations", organizationId, "invites", inviteId));
+    try {
+      await deleteDoc(doc(db, "inviteTokens", inviteToken));
+    } catch (err) {
+      console.error("Could not delete invite token:", err);
+    }
+  },
 };
+
+function mapInvite(
+  id: string,
+  organizationId: string,
+  data: Record<string, unknown>
+): Invite {
+  return {
+    id,
+    organizationId,
+    email: data.email as string,
+    role: data.role as Invite["role"],
+    assignedOutletIds: (data.assignedOutletIds as string[]) || [],
+    status: data.status as Invite["status"],
+    inviteToken: data.inviteToken as string,
+    invitedBy: data.invitedBy as string,
+    createdAt: (data.createdAt as Timestamp)?.toDate() || new Date(),
+    expiresAt: (data.expiresAt as Timestamp)?.toDate() || new Date(),
+    acceptedAt: data.acceptedAt ? (data.acceptedAt as Timestamp).toDate() : undefined,
+    acceptedBy: data.acceptedBy as string | undefined,
+  };
+}

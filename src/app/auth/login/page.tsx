@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { getErrorMessage } from "@/lib/errors";
 import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,9 +23,10 @@ export default function LoginPage() {
 
     try {
       await signIn(email, password);
-      router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Failed to sign in. Please check your credentials.");
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/dashboard");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to sign in. Please check your credentials."));
     } finally {
       setLoading(false);
     }
@@ -134,5 +137,13 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center" />}>
+      <LoginContent />
+    </Suspense>
   );
 }

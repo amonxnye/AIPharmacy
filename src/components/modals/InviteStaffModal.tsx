@@ -74,6 +74,7 @@ export default function InviteStaffModal({ isOpen, onClose, onSuccess }: InviteS
       const { inviteId, inviteToken } = await inviteService.createInvite(
         currentOrgId,
         user.uid,
+        currentOrg?.name || "Organization",
         {
           email: email.trim().toLowerCase(),
           role,

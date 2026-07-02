@@ -1,119 +1,255 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Trash2, Plus, Minus, CreditCard } from "lucide-react";
-
-const products = [
-  { id: 1, name: "Paracetamol 500mg", price: 100, stock: 450 },
-  { id: 2, name: "Amoxicillin 250mg", price: 350, stock: 320 },
-  { id: 3, name: "Ibuprofen 400mg", price: 150, stock: 280 },
-  { id: 4, name: "Metformin 500mg", price: 200, stock: 150 },
-  { id: 5, name: "Omeprazole 20mg", price: 250, stock: 200 },
-];
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { productService } from "@/lib/services/productService";
+import { salesService } from "@/lib/services/salesService";
+import { formatCurrency } from "@/lib/format";
+import type { Product } from "@/types/product";
+import type { SaleItem } from "@/types/sale";
+import {
+  Search,
+  Trash2,
+  Plus,
+  Minus,
+  CreditCard,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 
 interface CartItem {
-  id: number;
-  name: string;
+  product: Product;
   price: number;
+  available: number;
   quantity: number;
 }
 
 export default function POSPage() {
+  const { userProfile, globalProfile, currentMembership } = useAuth();
+  const { organization, selectedBranch, branches } = useOrganization();
+
+  const orgId = userProfile?.organizationId;
+  const currency = organization?.currency || "USD";
+  const taxRate = organization?.taxRate ?? 0; // stored as a decimal (e.g. 0.18)
+  const branch = selectedBranch || branches[0] || null;
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [stockByProduct, setStockByProduct] = useState<Record<string, number>>({});
+  const [priceByProduct, setPriceByProduct] = useState<Record<string, number>>({});
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [checkingOut, setCheckingOut] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "mobile_money" | "card">("cash");
 
-  const addToCart = (product: typeof products[0]) => {
-    const existing = cart.find((item) => item.id === product.id);
-    if (existing) {
-      setCart(
-        cart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      );
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+  const loadData = useCallback(async () => {
+    if (!orgId || !branch) {
+      setLoading(false);
+      return;
     }
+    setLoading(true);
+    try {
+      const [prods, batches] = await Promise.all([
+        productService.getProducts(orgId),
+        productService.getStockBatches(orgId, branch.id),
+      ]);
+      const stock: Record<string, number> = {};
+      const price: Record<string, number> = {};
+      for (const b of batches) {
+        stock[b.productId] = (stock[b.productId] || 0) + b.quantity;
+        // Use the most recent batch's selling price as the current price.
+        price[b.productId] = b.sellingPrice;
+      }
+      setProducts(prods);
+      setStockByProduct(stock);
+      setPriceByProduct(price);
+    } catch (err) {
+      console.error("Error loading POS data:", err);
+      setMessage({ type: "error", text: "Could not load products. Check your access." });
+    } finally {
+      setLoading(false);
+    }
+  }, [orgId, branch]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const addToCart = (product: Product) => {
+    const available = stockByProduct[product.id] || 0;
+    const price = priceByProduct[product.id] || 0;
+    if (available <= 0) return;
+    setCart((prev) => {
+      const existing = prev.find((i) => i.product.id === product.id);
+      if (existing) {
+        if (existing.quantity >= available) return prev;
+        return prev.map((i) =>
+          i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [...prev, { product, price, available, quantity: 1 }];
+    });
   };
 
-  const updateQuantity = (id: number, delta: number) => {
-    setCart(
-      cart
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
+  const updateQuantity = (id: string, delta: number) => {
+    setCart((prev) =>
+      prev
+        .map((i) =>
+          i.product.id === id
+            ? { ...i, quantity: Math.max(0, Math.min(i.available, i.quantity + delta)) }
+            : i
         )
-        .filter((item) => item.quantity > 0)
+        .filter((i) => i.quantity > 0)
     );
   };
 
-  const removeFromCart = (id: number) => {
-    setCart(cart.filter((item) => item.id !== id));
-  };
+  const removeFromCart = (id: string) =>
+    setCart((prev) => prev.filter((i) => i.product.id !== id));
 
-  const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.18; // 18% VAT
+  const subtotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const tax = subtotal * taxRate;
   const total = subtotal + tax;
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredProducts = useMemo(
+    () =>
+      products.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [products, searchQuery]
   );
+
+  const canSell =
+    !currentMembership || ["owner", "manager", "pharmacist", "cashier"].includes(currentMembership.role);
+
+  const handleCheckout = async () => {
+    if (!orgId || !branch || cart.length === 0) return;
+    if (!canSell) {
+      setMessage({ type: "error", text: "Your role can't process sales." });
+      return;
+    }
+    setCheckingOut(true);
+    setMessage(null);
+    try {
+      const items: SaleItem[] = cart.map((i) => ({
+        productId: i.product.id,
+        productName: i.product.name,
+        quantity: i.quantity,
+        unitPrice: i.price,
+        lineTotal: i.price * i.quantity,
+      }));
+
+      const { receiptNumber } = await salesService.createSale(orgId, {
+        branchId: branch.id,
+        cashierId: globalProfile?.uid || userProfile?.uid || "",
+        cashierName: globalProfile?.displayName || userProfile?.name || "Cashier",
+        items,
+        subtotal,
+        tax,
+        total,
+        paymentMethod,
+      });
+
+      setMessage({ type: "success", text: `Sale complete — receipt ${receiptNumber}.` });
+      setCart([]);
+      await loadData(); // refresh stock levels
+    } catch (err) {
+      console.error("Checkout failed:", err);
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Checkout failed. Please try again.",
+      });
+    } finally {
+      setCheckingOut(false);
+    }
+  };
+
+  if (!branch) {
+    return (
+      <div className="flex h-96 items-center justify-center text-center">
+        <div>
+          <AlertCircle className="mx-auto h-10 w-10 text-orange-500" />
+          <p className="mt-3 text-gray-600">
+            No outlet selected. Create an outlet to start selling.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-6">
-      {/* Left Side - Product Selection */}
+      {/* Left — product selection */}
       <div className="flex flex-1 flex-col space-y-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Point of Sale</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Search and add products to cart
+            {branch.name} · prices in {currency}
           </p>
         </div>
 
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search products by name or scan barcode..."
+            placeholder="Search products by name, SKU, or barcode..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full rounded-lg border border-gray-300 py-3 pl-12 pr-4 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
           />
         </div>
 
-        {/* Product Grid */}
         <div className="flex-1 overflow-y-auto rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-            {filteredProducts.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className="rounded-lg border-2 border-gray-200 p-4 text-left transition-all hover:border-teal-500 hover:shadow-md"
-              >
-                <div className="mb-2 flex h-24 items-center justify-center rounded-lg bg-gradient-to-br from-teal-50 to-teal-100">
-                  <span className="text-4xl">💊</span>
-                </div>
-                <h3 className="font-medium text-gray-900">{product.name}</h3>
-                <p className="mt-1 text-sm text-gray-500">Stock: {product.stock}</p>
-                <p className="mt-2 text-lg font-bold text-teal-600">
-                  UGX {product.price.toLocaleString()}
-                </p>
-              </button>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex h-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-center text-sm text-gray-500">
+              No products yet. Add products in Inventory to sell them here.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+              {filteredProducts.map((product) => {
+                const available = stockByProduct[product.id] || 0;
+                const price = priceByProduct[product.id] || 0;
+                const out = available <= 0;
+                return (
+                  <button
+                    key={product.id}
+                    onClick={() => addToCart(product)}
+                    disabled={out}
+                    className="rounded-lg border-2 border-gray-200 p-4 text-left transition-all hover:border-teal-500 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <div className="mb-2 flex h-24 items-center justify-center rounded-lg bg-gradient-to-br from-teal-50 to-teal-100">
+                      <span className="text-4xl">💊</span>
+                    </div>
+                    <h3 className="font-medium text-gray-900">{product.name}</h3>
+                    <p className={`mt-1 text-sm ${out ? "text-red-500" : "text-gray-500"}`}>
+                      {out ? "Out of stock" : `Stock: ${available}`}
+                    </p>
+                    <p className="mt-2 text-lg font-bold text-teal-600">
+                      {formatCurrency(price, currency)}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Right Side - Cart & Checkout */}
+      {/* Right — cart & checkout */}
       <div className="flex w-96 flex-col rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5">
         <div className="border-b border-gray-200 p-6">
           <h2 className="text-xl font-bold text-gray-900">Current Sale</h2>
         </div>
 
-        {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-6">
           {cart.length === 0 ? (
             <div className="flex h-full items-center justify-center text-center">
@@ -130,33 +266,34 @@ export default function POSPage() {
             <div className="space-y-4">
               {cart.map((item) => (
                 <div
-                  key={item.id}
+                  key={item.product.id}
                   className="flex items-center gap-3 rounded-lg border border-gray-200 p-3"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.name}</p>
+                    <p className="font-medium text-gray-900">{item.product.name}</p>
                     <p className="text-sm text-gray-500">
-                      UGX {item.price.toLocaleString()} each
+                      {formatCurrency(item.price, currency)} each
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateQuantity(item.id, -1)}
+                      onClick={() => updateQuantity(item.product.id, -1)}
                       className="rounded-lg bg-gray-100 p-1 hover:bg-gray-200"
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    <span className="w-8 text-center font-medium">
+                    <span className="w-8 text-center font-medium tabular-nums">
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() => updateQuantity(item.id, 1)}
-                      className="rounded-lg bg-gray-100 p-1 hover:bg-gray-200"
+                      onClick={() => updateQuantity(item.product.id, 1)}
+                      disabled={item.quantity >= item.available}
+                      className="rounded-lg bg-gray-100 p-1 hover:bg-gray-200 disabled:opacity-40"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => removeFromCart(item.product.id)}
                       className="ml-2 rounded-lg bg-red-100 p-1 text-red-600 hover:bg-red-200"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -168,29 +305,68 @@ export default function POSPage() {
           )}
         </div>
 
-        {/* Totals */}
         <div className="border-t border-gray-200 p-6">
+          {message && (
+            <div
+              className={`mb-3 flex items-center gap-2 rounded-lg p-2.5 text-sm ${
+                message.type === "success"
+                  ? "bg-green-50 text-green-700"
+                  : "bg-red-50 text-red-700"
+              }`}
+            >
+              {message.type === "success" ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0" />
+              ) : (
+                <AlertCircle className="h-4 w-4 shrink-0" />
+              )}
+              {message.text}
+            </div>
+          )}
+
+          <div className="mb-3">
+            <label className="mb-1 block text-xs font-medium text-gray-500">Payment method</label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            >
+              <option value="cash">Cash</option>
+              <option value="mobile_money">Mobile Money</option>
+              <option value="card">Card</option>
+            </select>
+          </div>
+
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium">UGX {subtotal.toLocaleString()}</span>
+              <span className="font-medium tabular-nums">{formatCurrency(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Tax (18%)</span>
-              <span className="font-medium">UGX {tax.toLocaleString()}</span>
+              <span className="text-gray-600">Tax ({(taxRate * 100).toFixed(1)}%)</span>
+              <span className="font-medium tabular-nums">{formatCurrency(tax, currency)}</span>
             </div>
             <div className="flex justify-between border-t border-gray-200 pt-2 text-lg font-bold">
               <span>Total</span>
-              <span className="text-teal-600">UGX {total.toLocaleString()}</span>
+              <span className="text-teal-600 tabular-nums">{formatCurrency(total, currency)}</span>
             </div>
           </div>
 
           <button
-            disabled={cart.length === 0}
+            onClick={handleCheckout}
+            disabled={cart.length === 0 || checkingOut}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
-            <CreditCard className="h-5 w-5" />
-            Complete Sale
+            {checkingOut ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <CreditCard className="h-5 w-5" />
+                Complete Sale
+              </>
+            )}
           </button>
         </div>
       </div>

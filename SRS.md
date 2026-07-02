@@ -1095,11 +1095,11 @@ AIPharmacy differentiates from existing pharmacy management solutions through:
 - [x] Self-service onboarding (2-step wizard)
 - [x] Password reset flow
 - [x] Public landing page with pricing
-- [x] Dashboard (UI complete, real data integration in progress)
+- [x] Dashboard with live aggregates (sales today, product count, low stock, expiring)
 - [x] Inventory management (product + stock batch CRUD)
 - [x] Outlet management
 - [x] Staff management with email invitations
-- [x] POS UI (cart, search, tax calculation)
+- [x] POS end-to-end (real products, cart, checkout records sale + deducts stock FEFO, org currency/tax)
 - [x] Settings with real persistence (org, profile)
 - [x] Role-based access enforcement (sidebar filtering + RoleGuard)
 - [x] Real outlet selector in header
@@ -1115,8 +1115,12 @@ AIPharmacy differentiates from existing pharmacy management solutions through:
 - [x] Staff service multi-org compatibility
 - [x] Race condition fixes (OrganizationContext, AuthContext)
 - [x] ProtectedRoute loading state fix (no flash of content)
-- [ ] POS backend (sale recording, stock deduction) — in progress
-- [ ] Receipt generation — in progress
+- [x] Sales service with transactional stock deduction
+- [x] Tenant isolation enforced by Firestore rules (org-side membership records)
+- [x] Firestore rules + indexes wired into firebase.json for deployment
+- [x] Auto-generated organization IDs (no collision risk)
+- [x] Email verification at signup; invite acceptance requires verified email
+- [ ] Receipt generation — planned
 
 #### Phase 2: Enhancement
 - [ ] Procurement module (PR, PO, GRN)
@@ -1206,6 +1210,7 @@ AIPharmacy differentiates from existing pharmacy management solutions through:
 | 1.0 | 2025-12-06 | Development Team | Initial SRS document |
 | 2.0 | 2026-06-27 | Development Team | Major revision: added landing page, password reset, role-based access, global currency support, real outlet selector, sidebar user info & logout, settings persistence. Added sections 9-12 (market strategy, monetization, compliance, competitive differentiation). Updated all sections to reflect current architecture (Next.js 16, React 19, TypeScript 5.9). |
 | 2.1 | 2026-06-27 | Development Team | Stability & security hardening: fixed signup atomicity, invite flow rollback, tax rate consistency, staff service multi-org support, race conditions in contexts. Added error boundary, Firestore security rules, input sanitization. Added sections 11.5, 13.4, 13.5 (security hardening, stability fixes, next features roadmap). Bumped to v0.3. |
+| 2.2 | 2026-07-02 | Development Team | Core build-out: rewrote Firestore rules for real tenant isolation via org-side membership records and wired them into firebase.json with indexes; auto-generated org IDs; email verification at signup + verified-email-gated invite acceptance; token lookups via top-level inviteTokens (no all-org scan). Built the real transaction loop (salesService with transactional FEFO stock deduction, POS checkout, live dashboard). Wired product/stock/outlet/staff CRUD end-to-end; collapsed the three staff representations into the authoritative org membership record. Fixed the invite funnel (correct routes, redirect handling), shared app shell with page-level RoleGuard, org-switch branch clearing, and settings field hydration. Production build passes. |
 
 ---
 

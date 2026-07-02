@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { branchService } from "@/lib/services/branchService";
+import { getErrorMessage } from "@/lib/errors";
 import { Building2, MapPin, Phone, FileText, AlertCircle } from "lucide-react";
 
 export default function BranchSetupPage() {
@@ -37,8 +38,8 @@ export default function BranchSetupPage() {
 
       // Redirect to dashboard
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Failed to create branch. Please try again.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to create branch. Please try again."));
     } finally {
       setLoading(false);
     }

@@ -3,31 +3,34 @@
 A modern, cloud-based multi-tenant SaaS platform for pharmacy outlet management. Built with Next.js, TypeScript, TailwindCSS, and Firebase.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Next.js](https://img.shields.io/badge/Next.js-16.0-black)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Next.js](https://img.shields.io/badge/Next.js-15.1-black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
 ![Firebase](https://img.shields.io/badge/Firebase-Enabled-orange)
 
 ## 🚀 Features
 
-### Current Prototype (v0.1)
+### Working today (v0.3)
 
-- ✅ **Dashboard**: Real-time sales metrics, low stock alerts, and recent transactions
-- ✅ **Inventory Management**: Product listing with batch tracking, expiry alerts, and stock levels
-- ✅ **Point of Sale (POS)**: Interactive cart system with product search and checkout
-- ✅ **Modern UI**: Responsive design with TailwindCSS and professional styling
-- ✅ **Firebase Integration**: Authentication, Firestore, and Analytics ready
+- ✅ **Multi-tenant organizations** with data isolation enforced by Firestore security rules
+- ✅ **Authentication**: sign up (with email verification), sign in, password reset
+- ✅ **Self-service onboarding**: create an organization and first outlet
+- ✅ **Point of Sale**: real product search, cart, and checkout that records a sale and deducts stock (FEFO) transactionally, using the org's currency and tax rate
+- ✅ **Inventory**: product CRUD, opening stock batches, live stock levels, low-stock and expiry indicators
+- ✅ **Dashboard**: live sales-today, product count, low-stock and expiring aggregates from real data
+- ✅ **Outlets**: branch add / edit / delete
+- ✅ **Staff**: token-based email invitations, role-based membership, pending-invite management, role & outlet editing, removal
+- ✅ **Role-based access control** (Owner, Manager, Pharmacist, Cashier, Inventory Officer) at both the UI and the security-rule layer
+- ✅ **Settings**: organization and profile persistence
 
-### Planned Features
+### Planned
 
-- 🔄 Multi-tenant organization management
-- 🔄 Role-based access control (Owner, Manager, Pharmacist, Cashier)
-- 🔄 Outlet/Branch management
-- 🔄 Staff management and permissions
+- 🔄 Receipt generation and printing
 - 🔄 Procurement and supplier management
-- 🔄 Receipt generation with custom branding
-- 🔄 Reports and analytics
-- 🔄 AI-powered demand forecasting
-- 🔄 Drug interaction alerts
+- 🔄 Sales reports and CSV/PDF export
+- 🔄 Audit logging
+- 🔄 Offline POS mode
+- 🔄 AI demand forecasting and drug-interaction alerts
+- 🔄 Subscription billing (Stripe / Flutterwave / Razorpay)
 
 ## 📋 Prerequisites
 
@@ -90,6 +93,12 @@ A modern, cloud-based multi-tenant SaaS platform for pharmacy outlet management.
    firebase deploy --only hosting
    ```
 
+5. **Deploy Firestore security rules & indexes** (required — the app enforces
+   tenant isolation entirely through these rules)
+   ```bash
+   firebase deploy --only firestore:rules,firestore:indexes
+   ```
+
 Your app will be live at: `https://aipharmacy--aipharamcy.us-east4.hosted.app/`
 
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
@@ -119,7 +128,7 @@ web/
 
 | Technology       | Purpose                            |
 | ---------------- | ---------------------------------- |
-| **Next.js 16**   | React framework with App Router    |
+| **Next.js 15**   | React framework with App Router    |
 | **TypeScript**   | Type-safe development              |
 | **TailwindCSS**  | Utility-first CSS framework        |
 | **Firebase**     | Authentication, Firestore, Hosting |

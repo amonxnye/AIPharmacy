@@ -8,9 +8,10 @@ import {
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   deleteUser,
+  sendEmailVerification,
   UserCredential
 } from "firebase/auth";
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import type { GlobalUserProfile, Membership, UserRole } from "@/types/user";
 
@@ -191,6 +192,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(firebaseUser);
       if (firebaseUser) {
+        // Keep the app in a loading state while the profile resolves so
+        // guards don't briefly see an authenticated user with no profile.
+        setLoading(true);
         await loadUserProfile(firebaseUser.uid);
       } else {
         setUserProfile(null);
@@ -228,6 +232,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (firestoreError) {
       await deleteUser(userCredential.user);
       throw firestoreError;
+    }
+
+    // Send a verification email (best-effort). Verified email is required to
+    // accept staff invitations, per the Firestore security rules.
+    try {
+      await sendEmailVerification(userCredential.user);
+    } catch (verifyError) {
+      console.error("Could not send verification email:", verifyError);
     }
 
     return userCredential;

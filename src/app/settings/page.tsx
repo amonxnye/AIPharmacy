@@ -20,11 +20,12 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { organizationService } from "@/lib/services/organizationService";
+import { getErrorMessage } from "@/lib/errors";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 export default function SettingsPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, globalProfile } = useAuth();
   const { organization } = useOrganization();
   const [activeTab, setActiveTab] = useState("organization");
   const [saving, setSaving] = useState(false);
@@ -65,22 +66,22 @@ export default function SettingsPage() {
         logo: organization.logo || "",
         currency: organization.currency || "UGX",
         taxRate: organization.taxRate < 1 ? Math.round(organization.taxRate * 100 * 100) / 100 : organization.taxRate,
-        address: "",
-        phone: "",
-        email: "",
+        address: organization.address || "",
+        phone: organization.phone || "",
+        email: organization.email || "",
       });
     }
   }, [organization]);
 
   useEffect(() => {
-    if (userProfile) {
+    if (userProfile || globalProfile) {
       setProfileSettings({
-        name: userProfile.name || "",
-        email: userProfile.email || "",
-        phone: "",
+        name: globalProfile?.displayName || userProfile?.name || "",
+        email: globalProfile?.email || userProfile?.email || "",
+        phone: globalProfile?.phone || "",
       });
     }
-  }, [userProfile]);
+  }, [userProfile, globalProfile]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -99,13 +100,14 @@ export default function SettingsPage() {
         setSaveMessage({ type: "success", text: "Organization settings saved." });
       } else if (activeTab === "profile" && userProfile) {
         await updateDoc(doc(db, "users", userProfile.uid), {
+          displayName: profileSettings.name,
           name: profileSettings.name,
           phone: profileSettings.phone,
         });
         setSaveMessage({ type: "success", text: "Profile updated." });
       }
-    } catch (err: any) {
-      setSaveMessage({ type: "error", text: err.message || "Failed to save. Please try again." });
+    } catch (err) {
+      setSaveMessage({ type: "error", text: getErrorMessage(err, "Failed to save. Please try again.") });
     } finally {
       setSaving(false);
       setTimeout(() => setSaveMessage(null), 4000);
