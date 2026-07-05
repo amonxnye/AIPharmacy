@@ -9,7 +9,6 @@ import {
   Bell,
   Shield,
   CreditCard,
-  Globe,
   Save,
   Mail,
   Phone,
@@ -178,11 +177,12 @@ export default function SettingsPage() {
                   <Building2 className="h-5 w-5 text-gray-400" />
                   <input
                     type="text"
+                    disabled={saving}
                     value={orgSettings.name}
                     onChange={(e) =>
                       setOrgSettings({ ...orgSettings, name: e.target.value })
                     }
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -560,9 +560,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Update your password to keep your account secure
                 </p>
-                <button className="mt-4 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                <button disabled className="mt-4 rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed" title="Coming soon">
                   Change Password
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -572,9 +573,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Add an extra layer of security to your account
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   Enable 2FA
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -582,9 +584,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Manage your active sessions across devices
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   View Sessions
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
             </div>
           </div>
@@ -613,9 +616,10 @@ export default function SettingsPage() {
                     Active
                   </span>
                 </div>
-                <button className="mt-4 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                <button disabled className="mt-4 rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed" title="Coming soon">
                   Upgrade Plan
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -623,9 +627,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   No payment method added
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   Add Payment Method
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -633,9 +638,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   View your past invoices and payments
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   View History
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
             </div>
           </div>

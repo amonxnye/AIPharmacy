@@ -37,14 +37,18 @@ export default function OutletsPage() {
 
   const handleDelete = async (branch: Branch) => {
     if (!orgId) return;
+    if (userProfile?.role !== "owner" && userProfile?.role !== "manager") {
+      alert("Only owners and managers can delete outlets.");
+      return;
+    }
     if (!confirm(`Delete "${branch.name}"? Staff assigned only to this outlet will lose access.`)) return;
     setBusyId(branch.id);
     try {
       await branchService.delete(orgId, branch.id);
       await refreshBranches();
     } catch (err) {
-      console.error("Error deleting outlet:", err);
-      alert("Could not delete this outlet.");
+      const message = err instanceof Error ? err.message : "Unknown error";
+      alert(message.includes("permission") ? "You don't have permission to delete this outlet." : "Could not delete this outlet. Please try again.");
     } finally {
       setBusyId(null);
     }

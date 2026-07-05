@@ -24,7 +24,8 @@ function LoginContent() {
     try {
       await signIn(email, password);
       const redirect = searchParams.get("redirect");
-      router.push(redirect || "/dashboard");
+      const isSafeRedirect = redirect && redirect.startsWith("/") && !redirect.startsWith("//");
+      router.push(isSafeRedirect ? redirect : "/dashboard");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to sign in. Please check your credentials."));
     } finally {

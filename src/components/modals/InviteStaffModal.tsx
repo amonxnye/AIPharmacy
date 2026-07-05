@@ -71,7 +71,7 @@ export default function InviteStaffModal({ isOpen, onClose, onSuccess }: InviteS
 
     try {
       // Create invite in Firestore
-      const { inviteId, inviteToken } = await inviteService.createInvite(
+      const { inviteToken } = await inviteService.createInvite(
         currentOrgId,
         user.uid,
         currentOrg?.name || "Organization",
@@ -94,20 +94,10 @@ export default function InviteStaffModal({ isOpen, onClose, onSuccess }: InviteS
           role,
           inviteLink,
         });
-        console.log("Invitation email sent successfully");
-      } catch (emailError) {
-        console.error("Failed to send invitation email:", emailError);
+      } catch {
         // Continue even if email fails - the invite is created in Firestore
         // User can manually share the link
       }
-
-      console.log("Invitation created:", {
-        inviteId,
-        inviteLink,
-        email: email.trim().toLowerCase(),
-        role,
-        outlets: selectedOutlets,
-      });
 
       setSuccess(true);
 

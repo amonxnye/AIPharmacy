@@ -67,8 +67,8 @@ export default function StaffPage() {
       ]);
       setStaffMembers(members);
       setPendingInvites(invites);
-    } catch (error) {
-      console.error("Error loading staff:", error);
+    } catch {
+      // Silent failure, show empty lists
     } finally {
       setLoading(false);
     }
@@ -99,9 +99,8 @@ export default function StaffPage() {
     try {
       await staffService.delete(orgId, member.userId);
       await loadAll();
-    } catch (err) {
-      console.error("Error removing staff:", err);
-      alert("Could not remove this member.");
+    } catch {
+      alert("Could not remove this member. Please try again.");
     } finally {
       setBusyId(null);
     }
@@ -114,9 +113,8 @@ export default function StaffPage() {
     try {
       await inviteService.revokeInvite(orgId, invite.id, invite.inviteToken);
       await loadAll();
-    } catch (err) {
-      console.error("Error revoking invite:", err);
-      alert("Could not revoke this invitation.");
+    } catch {
+      alert("Could not revoke this invitation. Please try again.");
     } finally {
       setBusyId(null);
     }

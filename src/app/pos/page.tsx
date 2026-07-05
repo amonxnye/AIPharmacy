@@ -66,8 +66,7 @@ export default function POSPage() {
       setProducts(prods);
       setStockByProduct(stock);
       setPriceByProduct(price);
-    } catch (err) {
-      console.error("Error loading POS data:", err);
+    } catch {
       setMessage({ type: "error", text: "Could not load products. Check your access." });
     } finally {
       setLoading(false);
@@ -158,11 +157,11 @@ export default function POSPage() {
       setMessage({ type: "success", text: `Sale complete — receipt ${receiptNumber}.` });
       setCart([]);
       await loadData(); // refresh stock levels
-    } catch (err) {
-      console.error("Checkout failed:", err);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Checkout failed. Please try again.";
       setMessage({
         type: "error",
-        text: err instanceof Error ? err.message : "Checkout failed. Please try again.",
+        text: message.includes("permission") ? "You don't have permission to create sales." : "Checkout failed. Please try again.",
       });
     } finally {
       setCheckingOut(false);

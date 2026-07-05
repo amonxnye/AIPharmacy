@@ -106,8 +106,7 @@ export default function ProductModal({
         }
       }
       onSaved();
-    } catch (err) {
-      console.error("Error saving product:", err);
+    } catch {
       setError("Could not save the product. Check your access and try again.");
       setSaving(false);
     }
@@ -171,24 +170,28 @@ export default function ProductModal({
             </Field>
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label htmlFor="requires-prescription" className="flex items-center gap-2 text-sm text-gray-700">
             <input
+              id="requires-prescription"
               type="checkbox"
               checked={form.requiresPrescription}
               onChange={(e) => set("requiresPrescription", e.target.checked)}
               className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+              aria-label="Requires prescription"
             />
             Requires prescription
           </label>
 
           {!isEdit && (
             <div className="rounded-lg border border-gray-200 p-4">
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+              <label htmlFor="add-stock-checkbox" className="flex items-center gap-2 text-sm font-medium text-gray-700">
                 <input
+                  id="add-stock-checkbox"
                   type="checkbox"
                   checked={addStock}
                   onChange={(e) => setAddStock(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  aria-label="Add opening stock now"
                 />
                 Add opening stock now
               </label>

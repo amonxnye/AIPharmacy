@@ -16,7 +16,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { PAGE_ROLES } from "@/components/RoleGuard";
-import type { UserRole } from "@/types/user";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },

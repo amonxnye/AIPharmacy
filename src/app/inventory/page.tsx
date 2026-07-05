@@ -61,14 +61,18 @@ export default function InventoryPage() {
 
   const handleDelete = async (product: Product) => {
     if (!orgId) return;
+    if (userProfile?.role !== "owner" && userProfile?.role !== "manager" && userProfile?.role !== "inventory_officer") {
+      alert("Only owners, managers, and inventory officers can delete products.");
+      return;
+    }
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
     setBusyId(product.id);
     try {
       await productService.deleteProduct(orgId, product.id);
       await load();
     } catch (err) {
-      console.error("Error deleting product:", err);
-      alert("Could not delete this product.");
+      const message = err instanceof Error ? err.message : "Unknown error";
+      alert(message.includes("permission") ? "You don't have permission to delete this product." : "Could not delete this product. Please try again.");
     } finally {
       setBusyId(null);
     }

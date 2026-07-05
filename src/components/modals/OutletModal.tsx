@@ -40,8 +40,7 @@ export default function OutletModal({ orgId, outlet, onClose, onSaved }: OutletM
         await branchService.create(orgId, form);
       }
       onSaved();
-    } catch (err) {
-      console.error("Error saving outlet:", err);
+    } catch {
       setError("Could not save the outlet. Check your access and try again.");
       setSaving(false);
     }
@@ -71,21 +70,21 @@ export default function OutletModal({ orgId, outlet, onClose, onSaved }: OutletM
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Outlet Name *</label>
-            <input className={input} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Downtown Branch" />
+            <label htmlFor="outlet-name" className="mb-1 block text-sm font-medium text-gray-700">Outlet Name *</label>
+            <input id="outlet-name" className={input} value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="e.g. Downtown Branch" />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">Address</label>
-            <input className={input} value={form.address} onChange={(e) => set("address", e.target.value)} />
+            <label htmlFor="outlet-address" className="mb-1 block text-sm font-medium text-gray-700">Address</label>
+            <input id="outlet-address" className={input} value={form.address} onChange={(e) => set("address", e.target.value)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">Phone</label>
-              <input className={input} value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+              <label htmlFor="outlet-phone" className="mb-1 block text-sm font-medium text-gray-700">Phone</label>
+              <input id="outlet-phone" className={input} value={form.phone} onChange={(e) => set("phone", e.target.value)} />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">License Number</label>
-              <input className={input} value={form.license} onChange={(e) => set("license", e.target.value)} />
+              <label htmlFor="outlet-license" className="mb-1 block text-sm font-medium text-gray-700">License Number</label>
+              <input id="outlet-license" className={input} value={form.license} onChange={(e) => set("license", e.target.value)} />
             </div>
           </div>
 

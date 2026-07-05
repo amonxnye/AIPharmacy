@@ -29,7 +29,7 @@ const roleLabels = {
 function AcceptInviteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, globalProfile, refreshUserProfile } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
 
   const [invite, setInvite] = useState<Invite | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -88,8 +88,7 @@ function AcceptInviteContent() {
       setInvite(inviteData);
       setOrgId(organizationId);
       setLoading(false);
-    } catch (err) {
-      console.error("Error loading invite:", err);
+    } catch {
       setError("Failed to load invitation. Please try again.");
       setLoading(false);
     }
