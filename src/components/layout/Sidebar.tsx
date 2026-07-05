@@ -12,6 +12,7 @@ import {
   LogOut,
   HelpCircle,
   MessageSquare,
+  Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,6 +22,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "POS", href: "/pos", icon: ShoppingCart },
+  { name: "Procurement", href: "/procurement", icon: Truck },
   { name: "Outlets", href: "/outlets", icon: Building2 },
   { name: "Staff", href: "/staff", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },

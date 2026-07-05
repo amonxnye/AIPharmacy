@@ -6,8 +6,9 @@ import { useOrganization } from "@/contexts/OrganizationContext";
 import { productService } from "@/lib/services/productService";
 import { salesService } from "@/lib/services/salesService";
 import { formatCurrency } from "@/lib/format";
+import ReceiptModal from "@/components/ReceiptModal";
 import type { Product } from "@/types/product";
-import type { SaleItem } from "@/types/sale";
+import type { SaleItem, Sale } from "@/types/sale";
 import {
   Search,
   Trash2,
@@ -44,6 +45,7 @@ export default function POSPage() {
   const [checkingOut, setCheckingOut] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "mobile_money" | "card">("cash");
+  const [currentSale, setCurrentSale] = useState<Sale | null>(null);
 
   const loadData = useCallback(async () => {
     if (!orgId || !branch) {
@@ -143,7 +145,7 @@ export default function POSPage() {
         lineTotal: i.price * i.quantity,
       }));
 
-      const { receiptNumber } = await salesService.createSale(orgId, {
+      const { saleId, receiptNumber } = await salesService.createSale(orgId, {
         branchId: branch.id,
         cashierId: globalProfile?.uid || userProfile?.uid || "",
         cashierName: globalProfile?.displayName || userProfile?.name || "Cashier",
@@ -154,7 +156,15 @@ export default function POSPage() {
         paymentMethod,
       });
 
-      setMessage({ type: "success", text: `Sale complete — receipt ${receiptNumber}.` });
+      // Fetch the created sale to display in receipt modal
+      const sale = await salesService.getSale(orgId, saleId);
+      if (sale) {
+        setCurrentSale(sale);
+        setMessage(null);
+      } else {
+        setMessage({ type: "success", text: `Sale complete — receipt ${receiptNumber}.` });
+      }
+
       setCart([]);
       await loadData(); // refresh stock levels
     } catch (error) {
@@ -369,6 +379,18 @@ export default function POSPage() {
           </button>
         </div>
       </div>
+
+      {/* Receipt Modal */}
+      <ReceiptModal
+        sale={currentSale}
+        organizationName={organization?.name}
+        outletName={branch?.name}
+        currency={currency}
+        onClose={() => {
+          setCurrentSale(null);
+          setMessage(null);
+        }}
+      />
     </div>
   );
 }
