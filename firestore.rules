@@ -145,6 +145,32 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'acceptedBy'])
           );
       }
+
+      // Subscriptions — readable by all members, writable only by cloud functions
+      match /subscription/{subscriptionId} {
+        allow read: if isMember(orgId);
+        allow write: if false; // Only cloud functions can write
+      }
+
+      // Payment transactions — readable by owners/managers, writable only by webhooks/cloud functions
+      match /payment_transactions/{transactionId} {
+        allow read: if isManagerOrOwner(orgId);
+        allow write: if false; // Only cloud functions can write
+      }
+
+      // Procurement — purchase orders
+      match /purchase_orders/{poId} {
+        allow read: if isMember(orgId);
+        allow create, update: if hasRole(orgId, ['owner', 'manager', 'inventory_officer']);
+        allow delete: if isManagerOrOwner(orgId);
+      }
+
+      // Procurement — goods receipts
+      match /goods_receipts/{grnId} {
+        allow read: if isMember(orgId);
+        allow create, update: if hasRole(orgId, ['owner', 'manager', 'inventory_officer']);
+        allow delete: if isManagerOrOwner(orgId);
+      }
     }
   }
 }

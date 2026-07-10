@@ -13,6 +13,7 @@ import {
   HelpCircle,
   MessageSquare,
   Truck,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +24,7 @@ const navigation = [
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "POS", href: "/pos", icon: ShoppingCart },
   { name: "Procurement", href: "/procurement", icon: Truck },
+  { name: "Subscription", href: "/subscription", icon: CreditCard },
   { name: "Outlets", href: "/outlets", icon: Building2 },
   { name: "Staff", href: "/staff", icon: Users },
   { name: "Settings", href: "/settings", icon: Settings },

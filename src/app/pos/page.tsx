@@ -5,8 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { productService } from "@/lib/services/productService";
 import { salesService } from "@/lib/services/salesService";
+import { subscriptionService } from "@/lib/services/subscriptionService";
 import { formatCurrency } from "@/lib/format";
 import ReceiptModal from "@/components/ReceiptModal";
+import SubscriptionRenewalModal from "@/components/modals/SubscriptionRenewalModal";
 import type { Product } from "@/types/product";
 import type { SaleItem, Sale } from "@/types/sale";
 import {
@@ -46,6 +48,10 @@ export default function POSPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "mobile_money" | "card">("cash");
   const [currentSale, setCurrentSale] = useState<Sale | null>(null);
+  const [subscriptionExpired, setSubscriptionExpired] = useState(false);
+  const [daysUntilExpiry, setDaysUntilExpiry] = useState(0);
+  const [subscriptionEndDate, setSubscriptionEndDate] = useState<Date | null>(null);
+  const [showRenewalModal, setShowRenewalModal] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!orgId || !branch) {
@@ -78,6 +84,25 @@ export default function POSPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (!orgId || !organization?.subscription) return;
+
+      const endDate = organization.subscription.endDate;
+      setSubscriptionEndDate(endDate);
+      const days = subscriptionService.daysUntilExpiry(endDate);
+      setDaysUntilExpiry(days);
+      const expired = subscriptionService.isSubscriptionExpired(endDate);
+      setSubscriptionExpired(expired);
+
+      if (expired || days <= 7) {
+        setShowRenewalModal(true);
+      }
+    };
+
+    checkSubscription();
+  }, [orgId, organization?.subscription]);
 
   const addToCart = (product: Product) => {
     const available = stockByProduct[product.id] || 0;
@@ -360,15 +385,27 @@ export default function POSPage() {
             </div>
           </div>
 
+          {subscriptionExpired && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>Subscription expired. Renew to process sales.</span>
+            </div>
+          )}
+
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0 || checkingOut}
+            disabled={cart.length === 0 || checkingOut || subscriptionExpired}
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {checkingOut ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Processing...
+              </>
+            ) : subscriptionExpired ? (
+              <>
+                <AlertCircle className="h-5 w-5" />
+                Subscription Expired
               </>
             ) : (
               <>
@@ -391,6 +428,20 @@ export default function POSPage() {
           setMessage(null);
         }}
       />
+
+      {/* Subscription Renewal Modal */}
+      {subscriptionEndDate && (
+        <SubscriptionRenewalModal
+          isOpen={showRenewalModal}
+          daysUntilExpiry={daysUntilExpiry}
+          expiryDate={subscriptionEndDate}
+          onClose={() => setShowRenewalModal(false)}
+          onRenew={() => {
+            // TODO: Redirect to payment page or show payment modal
+            setShowRenewalModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

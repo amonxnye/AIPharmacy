@@ -16,6 +16,14 @@ interface Organization {
   phone?: string;
   address?: string;
   country?: string;
+  subscription?: {
+    id: string;
+    startDate: Date;
+    endDate: Date;
+    status: "active" | "expired" | "cancelled";
+    paymentReference: string;
+    renewalEnabled: boolean;
+  };
   createdAt: Date;
 }
 
@@ -53,6 +61,25 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       const orgDoc = await getDoc(doc(db, "organizations", orgId));
       if (orgDoc.exists()) {
         const data = orgDoc.data();
+
+        let subscription;
+        try {
+          const subDoc = await getDoc(doc(db, "organizations", orgId, "subscription", orgId));
+          if (subDoc.exists()) {
+            const subData = subDoc.data();
+            subscription = {
+              id: subDoc.id,
+              startDate: subData.startDate?.toDate() || new Date(),
+              endDate: subData.endDate?.toDate() || new Date(),
+              status: subData.status,
+              paymentReference: subData.paymentReference,
+              renewalEnabled: subData.renewalEnabled || false,
+            };
+          }
+        } catch {
+          subscription = undefined;
+        }
+
         setOrganization({
           id: orgDoc.id,
           name: data.name,
@@ -64,6 +91,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
           phone: data.phone,
           address: data.address,
           country: data.country,
+          subscription,
           createdAt: data.createdAt?.toDate() || new Date(),
         });
       }
