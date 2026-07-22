@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = userDoc.data();
 
       // Check if user has new multi-org structure
-      if (data.memberships && Array.isArray(data.memberships)) {
+      if (data.memberships && Array.isArray(data.memberships) && data.memberships.length > 0) {
         // New multi-org user
         const profile: GlobalUserProfile = {
           uid,
@@ -128,13 +128,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             createdAt: profile.createdAt,
           });
         }
-      } else {
-        // Legacy single-org user - migrate to new structure
+      } else if (data.organizationId && data.organizationId !== "") {
+        // Legacy single-org user with organization - migrate to new structure
         const legacyProfile: UserProfile = {
           uid,
           email: data.email,
           name: data.name,
-          organizationId: data.organizationId || "",
+          organizationId: data.organizationId,
           role: data.role,
           assignedBranches: data.assignedBranches || [],
           createdAt: data.createdAt?.toDate() || new Date(),
@@ -142,42 +142,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUserProfile(legacyProfile);
 
-        // Convert to new structure
-        if (legacyProfile.organizationId) {
-          const membership: Membership = {
-            organizationId: legacyProfile.organizationId,
-            role: legacyProfile.role,
-            assignedOutletIds: legacyProfile.assignedBranches,
-            joinedAt: legacyProfile.createdAt,
-          };
+        const membership: Membership = {
+          organizationId: data.organizationId,
+          role: data.role || "owner",
+          assignedOutletIds: data.assignedBranches || [],
+          joinedAt: legacyProfile.createdAt,
+        };
 
-          setGlobalProfile({
-            uid,
-            displayName: legacyProfile.name,
-            email: legacyProfile.email,
-            memberships: [membership],
-            createdAt: legacyProfile.createdAt,
-            lastLoginAt: new Date(),
-          });
+        setGlobalProfile({
+          uid,
+          displayName: legacyProfile.name,
+          email: legacyProfile.email,
+          memberships: [membership],
+          createdAt: legacyProfile.createdAt,
+          lastLoginAt: new Date(),
+        });
 
-          setCurrentOrgId(legacyProfile.organizationId);
-          setCurrentMembership(membership);
+        setCurrentOrgId(data.organizationId);
+        setCurrentMembership(membership);
 
-          // Load org info
-          try {
-            const orgDoc = await getDoc(doc(db, "organizations", legacyProfile.organizationId));
-            if (orgDoc.exists()) {
-              const orgData = orgDoc.data();
-              setOrganizations([{
-                id: orgDoc.id,
-                name: orgData.name,
-                logo: orgData.logo || orgData.logoUrl,
-              }]);
-            }
-          } catch (error) {
-            console.error("Error loading organization:", error);
+        // Load org info
+        try {
+          const orgDoc = await getDoc(doc(db, "organizations", data.organizationId));
+          if (orgDoc.exists()) {
+            const orgData = orgDoc.data();
+            setOrganizations([{
+              id: orgDoc.id,
+              name: orgData.name,
+              logo: orgData.logo || orgData.logoUrl,
+            }]);
           }
+        } catch (error) {
+          console.error("Error loading organization:", error);
         }
+      } else {
+        // New user with no organization yet (just signed up)
+        const newUserProfile: GlobalUserProfile = {
+          uid,
+          displayName: data.displayName || data.name || "",
+          email: data.email,
+          phone: data.phone,
+          photoUrl: data.photoUrl,
+          memberships: [],
+          createdAt: data.createdAt?.toDate() || new Date(),
+          lastLoginAt: new Date(),
+        };
+
+        setGlobalProfile(newUserProfile);
+        setOrganizations([]);
+        // Don't set userProfile or currentOrgId yet - user needs to go through onboarding
       }
     } catch (error) {
       console.error("Error loading user profile:", error);
