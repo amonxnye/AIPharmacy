@@ -1,0 +1,176 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helpers ----------
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // The authoritative membership record lives at
+    // organizations/{orgId}/users/{uid}. A user cannot create this doc for an
+    // arbitrary org (see rules below), so it — not the client-writable
+    // users/{uid}.memberships array — is the tenant-isolation boundary.
+    function membershipPath(orgId) {
+      return /databases/$(database)/documents/organizations/$(orgId)/users/$(request.auth.uid);
+    }
+
+    function isMember(orgId) {
+      return isAuth() && exists(membershipPath(orgId));
+    }
+
+    function memberRole(orgId) {
+      return get(membershipPath(orgId)).data.role;
+    }
+
+    function hasRole(orgId, roles) {
+      return isMember(orgId) && memberRole(orgId) in roles;
+    }
+
+    function orgData(orgId) {
+      return get(/databases/$(database)/documents/organizations/$(orgId)).data;
+    }
+
+    function isOrgOwner(orgId) {
+      return isAuth() && orgData(orgId).ownerId == request.auth.uid;
+    }
+
+    function isManagerOrOwner(orgId) {
+      return hasRole(orgId, ['owner', 'manager']);
+    }
+
+    // A self-service join is allowed only when the caller presents a valid
+    // invite token whose email matches their authenticated (verified) email.
+    function validInviteJoin(orgId, userId) {
+      let token = request.resource.data.inviteToken;
+      let inv = get(/databases/$(database)/documents/inviteTokens/$(token)).data;
+      return request.auth.uid == userId
+        && exists(/databases/$(database)/documents/inviteTokens/$(token))
+        && inv.orgId == orgId
+        && inv.status == 'pending'
+        && inv.email == request.auth.token.email
+        && request.auth.token.email_verified == true;
+    }
+
+    // ---------- Global user profiles ----------
+    // Readable/writable only by the owner. NOT trusted for authorization —
+    // it is a convenience cache of the org list for the client.
+    match /users/{userId} {
+      allow read: if isAuth() && request.auth.uid == userId;
+      allow create, update: if isAuth() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // ---------- Invite token lookup (top-level) ----------
+    // Keyed by the 64-char random token; you can only read it if you already
+    // know the token (get by id). Listing is forbidden so tokens can't be
+    // enumerated. Managers/owners of the referenced org manage them.
+    match /inviteTokens/{token} {
+      allow get: if isAuth();
+      allow list: if false;
+      allow create: if isAuth() && isManagerOrOwner(request.resource.data.orgId);
+      allow delete: if isAuth() && isManagerOrOwner(resource.data.orgId);
+      // Owner/manager may edit; invitee may only flip status to 'accepted'.
+      allow update: if isAuth() && (
+        isManagerOrOwner(resource.data.orgId)
+        || (
+          resource.data.email == request.auth.token.email
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status == 'accepted'
+        )
+      );
+    }
+
+    // ---------- Organizations ----------
+    match /organizations/{orgId} {
+      allow read: if isMember(orgId);
+      // Create only your own org (ownerId must be you).
+      allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isOrgOwner(orgId) || isManagerOrOwner(orgId);
+      allow delete: if isOrgOwner(orgId);
+
+      // Branches / outlets
+      match /branches/{branchId} {
+        allow read: if isMember(orgId);
+        allow write: if isManagerOrOwner(orgId);
+      }
+
+      // Products
+      match /products/{productId} {
+        allow read: if isMember(orgId);
+        allow create, update: if hasRole(orgId, ['owner', 'manager', 'pharmacist', 'inventory_officer']);
+        allow delete: if isManagerOrOwner(orgId);
+      }
+
+      // Stock batches
+      match /stock/{stockId} {
+        allow read: if isMember(orgId);
+        allow write: if hasRole(orgId, ['owner', 'manager', 'pharmacist', 'inventory_officer']);
+      }
+
+      // Sales — append-only ledger
+      match /sales/{saleId} {
+        allow read: if isMember(orgId);
+        allow create: if hasRole(orgId, ['owner', 'manager', 'pharmacist', 'cashier']);
+        allow update, delete: if false;
+      }
+
+      // Org-scoped membership records (the authorization boundary).
+      match /users/{userId} {
+        allow read: if isMember(orgId);
+        // The org owner (bootstrapping) or a valid invite holder can create the
+        // record — and only once (no overwrite of an existing membership).
+        allow create: if !exists(/databases/$(database)/documents/organizations/$(orgId)/users/$(userId))
+          && (
+            (request.auth.uid == userId && isOrgOwner(orgId))
+            || validInviteJoin(orgId, userId)
+          );
+        // Owner/manager can change roles; a user may edit their own profile
+        // fields but not escalate their own role.
+        allow update: if isManagerOrOwner(orgId)
+          || (request.auth.uid == userId && request.resource.data.role == resource.data.role);
+        allow delete: if isManagerOrOwner(orgId);
+      }
+
+      // Invites (org-scoped record). Managed by owner/manager; the invitee may
+      // flip status to accepted when the invite is addressed to their email.
+      match /invites/{inviteId} {
+        allow read: if isManagerOrOwner(orgId);
+        allow create, delete: if isManagerOrOwner(orgId);
+        allow update: if isManagerOrOwner(orgId)
+          || (
+            resource.data.email == request.auth.token.email
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'acceptedAt', 'acceptedBy'])
+          );
+      }
+
+      // Subscriptions — readable by all members, writable only by cloud functions
+      match /subscription/{subscriptionId} {
+        allow read: if isMember(orgId);
+        allow write: if false; // Only cloud functions can write
+      }
+
+      // Payment transactions — readable by owners/managers, writable only by webhooks/cloud functions
+      match /payment_transactions/{transactionId} {
+        allow read: if isManagerOrOwner(orgId);
+        allow write: if false; // Only cloud functions can write
+      }
+
+      // Procurement — purchase orders
+      match /purchase_orders/{poId} {
+        allow read: if isMember(orgId);
+        allow create, update: if hasRole(orgId, ['owner', 'manager', 'inventory_officer']);
+        allow delete: if isManagerOrOwner(orgId);
+      }
+
+      // Procurement — goods receipts
+      match /goods_receipts/{grnId} {
+        allow read: if isMember(orgId);
+        allow create, update: if hasRole(orgId, ['owner', 'manager', 'inventory_officer']);
+        allow delete: if isManagerOrOwner(orgId);
+      }
+    }
+  }
+}

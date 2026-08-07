@@ -9,20 +9,26 @@ import {
   Bell,
   Shield,
   CreditCard,
-  Globe,
   Save,
   Mail,
   Phone,
   MapPin,
   Percent,
   DollarSign,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
+import { organizationService } from "@/lib/services/organizationService";
+import { getErrorMessage } from "@/lib/errors";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function SettingsPage() {
-  const { userProfile } = useAuth();
+  const { userProfile, globalProfile } = useAuth();
   const { organization } = useOrganization();
   const [activeTab, setActiveTab] = useState("organization");
   const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Organization settings
   const [orgSettings, setOrgSettings] = useState({
@@ -58,29 +64,53 @@ export default function SettingsPage() {
         name: organization.name || "",
         logo: organization.logo || "",
         currency: organization.currency || "UGX",
-        taxRate: organization.taxRate || 0,
-        address: "",
-        phone: "",
-        email: "",
+        taxRate: organization.taxRate < 1 ? Math.round(organization.taxRate * 100 * 100) / 100 : organization.taxRate,
+        address: organization.address || "",
+        phone: organization.phone || "",
+        email: organization.email || "",
       });
     }
   }, [organization]);
 
   useEffect(() => {
-    if (userProfile) {
+    if (userProfile || globalProfile) {
       setProfileSettings({
-        name: userProfile.name || "",
-        email: userProfile.email || "",
-        phone: "",
+        name: globalProfile?.displayName || userProfile?.name || "",
+        email: globalProfile?.email || userProfile?.email || "",
+        phone: globalProfile?.phone || "",
       });
     }
-  }, [userProfile]);
+  }, [userProfile, globalProfile]);
 
   const handleSave = async () => {
     setSaving(true);
-    // Simulate save
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setSaving(false);
+    setSaveMessage(null);
+
+    try {
+      if (activeTab === "organization" && organization) {
+        await organizationService.update(organization.id, {
+          name: orgSettings.name,
+          currency: orgSettings.currency,
+          taxRate: orgSettings.taxRate / 100,
+          email: orgSettings.email,
+          phone: orgSettings.phone,
+          address: orgSettings.address,
+        });
+        setSaveMessage({ type: "success", text: "Organization settings saved." });
+      } else if (activeTab === "profile" && userProfile) {
+        await updateDoc(doc(db, "users", userProfile.uid), {
+          displayName: profileSettings.name,
+          name: profileSettings.name,
+          phone: profileSettings.phone,
+        });
+        setSaveMessage({ type: "success", text: "Profile updated." });
+      }
+    } catch (err) {
+      setSaveMessage({ type: "error", text: getErrorMessage(err, "Failed to save. Please try again.") });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveMessage(null), 4000);
+    }
   };
 
   const tabs = [
@@ -147,11 +177,12 @@ export default function SettingsPage() {
                   <Building2 className="h-5 w-5 text-gray-400" />
                   <input
                     type="text"
+                    disabled={saving}
                     value={orgSettings.name}
                     onChange={(e) =>
                       setOrgSettings({ ...orgSettings, name: e.target.value })
                     }
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -206,10 +237,43 @@ export default function SettingsPage() {
                     }
                     className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                   >
-                    <option value="UGX">UGX - Ugandan Shilling</option>
-                    <option value="USD">USD - US Dollar</option>
-                    <option value="EUR">EUR - Euro</option>
-                    <option value="GBP">GBP - British Pound</option>
+                    <optgroup label="Africa">
+                      <option value="UGX">UGX - Ugandan Shilling</option>
+                      <option value="KES">KES - Kenyan Shilling</option>
+                      <option value="TZS">TZS - Tanzanian Shilling</option>
+                      <option value="NGN">NGN - Nigerian Naira</option>
+                      <option value="GHS">GHS - Ghanaian Cedi</option>
+                      <option value="ZAR">ZAR - South African Rand</option>
+                      <option value="EGP">EGP - Egyptian Pound</option>
+                      <option value="XOF">XOF - West African CFA Franc</option>
+                      <option value="RWF">RWF - Rwandan Franc</option>
+                      <option value="ETB">ETB - Ethiopian Birr</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                      <option value="USD">USD - US Dollar</option>
+                      <option value="CAD">CAD - Canadian Dollar</option>
+                      <option value="BRL">BRL - Brazilian Real</option>
+                      <option value="MXN">MXN - Mexican Peso</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="GBP">GBP - British Pound</option>
+                      <option value="CHF">CHF - Swiss Franc</option>
+                    </optgroup>
+                    <optgroup label="Asia & Pacific">
+                      <option value="INR">INR - Indian Rupee</option>
+                      <option value="PKR">PKR - Pakistani Rupee</option>
+                      <option value="BDT">BDT - Bangladeshi Taka</option>
+                      <option value="PHP">PHP - Philippine Peso</option>
+                      <option value="MYR">MYR - Malaysian Ringgit</option>
+                      <option value="SGD">SGD - Singapore Dollar</option>
+                      <option value="AUD">AUD - Australian Dollar</option>
+                      <option value="JPY">JPY - Japanese Yen</option>
+                    </optgroup>
+                    <optgroup label="Middle East">
+                      <option value="AED">AED - UAE Dirham</option>
+                      <option value="SAR">SAR - Saudi Riyal</option>
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -496,9 +560,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Update your password to keep your account secure
                 </p>
-                <button className="mt-4 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                <button disabled className="mt-4 rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed" title="Coming soon">
                   Change Password
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -508,9 +573,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Add an extra layer of security to your account
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   Enable 2FA
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -518,9 +584,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Manage your active sessions across devices
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   View Sessions
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
             </div>
           </div>
@@ -549,9 +616,10 @@ export default function SettingsPage() {
                     Active
                   </span>
                 </div>
-                <button className="mt-4 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+                <button disabled className="mt-4 rounded-lg bg-gray-300 px-4 py-2 text-sm font-medium text-gray-500 cursor-not-allowed" title="Coming soon">
                   Upgrade Plan
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -559,9 +627,10 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   No payment method added
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   Add Payment Method
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
@@ -569,17 +638,30 @@ export default function SettingsPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   View your past invoices and payments
                 </p>
-                <button className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                <button disabled className="mt-4 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-400 cursor-not-allowed" title="Coming soon">
                   View History
                 </button>
+                <p className="mt-2 text-xs text-gray-400">Coming soon</p>
               </div>
             </div>
           </div>
         )}
 
         {/* Save Button */}
-        {(activeTab === "organization" || activeTab === "profile") && (
-          <div className="flex justify-end border-t border-gray-200 pt-6">
+        {(activeTab === "organization" || activeTab === "profile" || activeTab === "notifications") && (
+          <div className="flex items-center justify-between border-t border-gray-200 pt-6">
+            {saveMessage ? (
+              <div className={`flex items-center gap-2 text-sm ${saveMessage.type === "success" ? "text-green-700" : "text-red-700"}`}>
+                {saveMessage.type === "success" ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : (
+                  <AlertCircle className="h-4 w-4" />
+                )}
+                {saveMessage.text}
+              </div>
+            ) : (
+              <div />
+            )}
             <button
               onClick={handleSave}
               disabled={saving}

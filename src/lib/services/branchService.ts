@@ -6,9 +6,7 @@ import {
   setDoc, 
   updateDoc, 
   deleteDoc,
-  serverTimestamp,
-  query,
-  where
+  serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 

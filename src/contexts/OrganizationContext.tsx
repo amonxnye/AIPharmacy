@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "./AuthContext";
 
@@ -12,10 +12,22 @@ interface Organization {
   currency: string;
   taxRate: number;
   ownerId: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  country?: string;
+  subscription?: {
+    id: string;
+    startDate: Date;
+    endDate: Date;
+    status: "active" | "expired" | "cancelled";
+    paymentReference: string;
+    renewalEnabled: boolean;
+  };
   createdAt: Date;
 }
 
-interface Branch {
+export interface Branch {
   id: string;
   name: string;
   address: string;
@@ -30,7 +42,7 @@ interface OrganizationContextType {
   branches: Branch[];
   selectedBranch: Branch | null;
   loading: boolean;
-  setSelectedBranch: (branch: Branch) => void;
+  setSelectedBranch: (branch: Branch | null) => void;
   refreshOrganization: () => Promise<void>;
   refreshBranches: () => Promise<void>;
 }
@@ -49,6 +61,25 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
       const orgDoc = await getDoc(doc(db, "organizations", orgId));
       if (orgDoc.exists()) {
         const data = orgDoc.data();
+
+        let subscription;
+        try {
+          const subDoc = await getDoc(doc(db, "organizations", orgId, "subscription", orgId));
+          if (subDoc.exists()) {
+            const subData = subDoc.data();
+            subscription = {
+              id: subDoc.id,
+              startDate: subData.startDate?.toDate() || new Date(),
+              endDate: subData.endDate?.toDate() || new Date(),
+              status: subData.status,
+              paymentReference: subData.paymentReference,
+              renewalEnabled: subData.renewalEnabled || false,
+            };
+          }
+        } catch {
+          subscription = undefined;
+        }
+
         setOrganization({
           id: orgDoc.id,
           name: data.name,
@@ -56,6 +87,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
           currency: data.currency,
           taxRate: data.taxRate,
           ownerId: data.ownerId,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          country: data.country,
+          subscription,
           createdAt: data.createdAt?.toDate() || new Date(),
         });
       }
@@ -81,23 +117,31 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         };
       });
       setBranches(branchesData);
-      
-      // Set first branch as selected if none selected
-      if (branchesData.length > 0 && !selectedBranch) {
-        setSelectedBranch(branchesData[0]);
-      }
+
+      // Keep a still-valid selection; otherwise default to the first branch.
+      setSelectedBranch((prev) =>
+        prev && branchesData.find((b) => b.id === prev.id)
+          ? prev
+          : branchesData[0] || null
+      );
     } catch (error) {
       console.error("Error loading branches:", error);
     }
   };
 
   useEffect(() => {
+    let cancelled = false;
+    const orgId = userProfile?.organizationId;
+
     const loadData = async () => {
-      if (userProfile?.organizationId) {
+      if (orgId) {
         setLoading(true);
-        await loadOrganization(userProfile.organizationId);
-        await loadBranches(userProfile.organizationId);
-        setLoading(false);
+        // Clear any selection carried over from a previously active org so a
+        // branch-scoped action can't target another tenant's branch.
+        setSelectedBranch(null);
+        await loadOrganization(orgId);
+        if (!cancelled) await loadBranches(orgId);
+        if (!cancelled) setLoading(false);
       } else {
         setOrganization(null);
         setBranches([]);
@@ -107,6 +151,10 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     };
 
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [userProfile?.organizationId]);
 
   const refreshOrganization = async () => {

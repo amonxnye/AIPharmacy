@@ -1,125 +1,103 @@
-import { 
+import {
   collection,
-  doc, 
-  getDoc, 
+  doc,
+  getDoc,
   getDocs,
-  setDoc, 
-  updateDoc, 
+  updateDoc,
   deleteDoc,
-  serverTimestamp
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { userService } from "./userService";
+import type { Membership, UserRole } from "@/types/user";
 
-export type StaffRole = "owner" | "manager" | "pharmacist" | "cashier" | "inventory_officer";
+export type StaffRole = UserRole;
 
+// A staff member is an org-side membership record living at
+// organizations/{orgId}/users/{uid} — the same authoritative doc the security
+// rules use. There is no separate `staff` collection anymore.
 export interface StaffMember {
-  id: string;
+  id: string; // the user's uid
   userId: string;
   name: string;
   email: string;
   role: StaffRole;
   assignedBranches: string[];
   organizationId: string;
+  status: "active" | "invited" | "suspended";
   createdAt: Date;
 }
 
-export interface CreateStaffData {
-  userId: string;
-  name: string;
-  email: string;
-  role: StaffRole;
-  assignedBranches: string[];
-}
-
 export const staffService = {
-  async create(organizationId: string, data: CreateStaffData): Promise<string> {
-    const staffRef = doc(collection(db, "organizations", organizationId, "staff"));
-    await setDoc(staffRef, {
-      ...data,
-      organizationId,
-      createdAt: serverTimestamp(),
-    });
-
-    // Also update the user's profile
-    await updateDoc(doc(db, "users", data.userId), {
-      organizationId,
-      role: data.role,
-      assignedBranches: data.assignedBranches,
-    });
-
-    return staffRef.id;
-  },
-
   async getAll(organizationId: string): Promise<StaffMember[]> {
-    const staffRef = collection(db, "organizations", organizationId, "staff");
-    const snapshot = await getDocs(staffRef);
-    
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
+    const usersRef = collection(db, "organizations", organizationId, "users");
+    const snapshot = await getDocs(usersRef);
+
+    return snapshot.docs.map((d) => {
+      const data = d.data();
       return {
-        id: doc.id,
-        userId: data.userId,
-        name: data.name,
-        email: data.email,
+        id: d.id,
+        userId: data.userId || d.id,
+        name: data.name || "",
+        email: data.email || "",
         role: data.role,
-        assignedBranches: data.assignedBranches || [],
-        organizationId: data.organizationId,
+        assignedBranches: data.assignedOutletIds || [],
+        organizationId,
+        status: data.status || "active",
         createdAt: data.createdAt?.toDate() || new Date(),
       };
     });
   },
 
-  async get(organizationId: string, staffId: string): Promise<StaffMember | null> {
-    const staffDoc = await getDoc(
-      doc(db, "organizations", organizationId, "staff", staffId)
-    );
-    
-    if (!staffDoc.exists()) return null;
-
-    const data = staffDoc.data();
+  async get(organizationId: string, userId: string): Promise<StaffMember | null> {
+    const snap = await getDoc(doc(db, "organizations", organizationId, "users", userId));
+    if (!snap.exists()) return null;
+    const data = snap.data();
     return {
-      id: staffDoc.id,
-      userId: data.userId,
-      name: data.name,
-      email: data.email,
+      id: snap.id,
+      userId: data.userId || snap.id,
+      name: data.name || "",
+      email: data.email || "",
       role: data.role,
-      assignedBranches: data.assignedBranches || [],
-      organizationId: data.organizationId,
+      assignedBranches: data.assignedOutletIds || [],
+      organizationId,
+      status: data.status || "active",
       createdAt: data.createdAt?.toDate() || new Date(),
     };
   },
 
+  // Update a member's role and/or outlet assignments. Writes both the
+  // authoritative org-side record and the user's global membership cache.
   async update(
-    organizationId: string, 
-    staffId: string, 
+    organizationId: string,
     userId: string,
-    data: Partial<Omit<CreateStaffData, 'userId' | 'email'>>
+    data: { role?: StaffRole; assignedBranches?: string[] }
   ): Promise<void> {
-    await updateDoc(
-      doc(db, "organizations", organizationId, "staff", staffId),
-      data
-    );
+    const orgUpdate: Record<string, unknown> = {};
+    if (data.role) orgUpdate.role = data.role;
+    if (data.assignedBranches) orgUpdate.assignedOutletIds = data.assignedBranches;
 
-    // Also update the user's profile
-    const updateData: any = {};
-    if (data.role) updateData.role = data.role;
-    if (data.assignedBranches) updateData.assignedBranches = data.assignedBranches;
-    
-    if (Object.keys(updateData).length > 0) {
-      await updateDoc(doc(db, "users", userId), updateData);
+    if (Object.keys(orgUpdate).length > 0) {
+      await updateDoc(doc(db, "organizations", organizationId, "users", userId), orgUpdate);
+    }
+
+    const membershipUpdate: Partial<Membership> = {};
+    if (data.role) membershipUpdate.role = data.role;
+    if (data.assignedBranches) membershipUpdate.assignedOutletIds = data.assignedBranches;
+    if (Object.keys(membershipUpdate).length > 0) {
+      await userService.updateMembership(userId, organizationId, membershipUpdate).catch((err) => {
+        // The member's global cache is only writable by that member; owners
+        // updating someone else's role can't touch it. Non-fatal — the
+        // authoritative org record is already updated.
+        console.warn("Could not sync membership cache:", err);
+      });
     }
   },
 
-  async delete(organizationId: string, staffId: string, userId: string): Promise<void> {
-    await deleteDoc(
-      doc(db, "organizations", organizationId, "staff", staffId)
-    );
-
-    // Remove organization from user profile
-    await updateDoc(doc(db, "users", userId), {
-      organizationId: "",
-      role: "owner",
-      assignedBranches: [],
+  // Remove a member from the organization.
+  async delete(organizationId: string, userId: string): Promise<void> {
+    await deleteDoc(doc(db, "organizations", organizationId, "users", userId));
+    await userService.removeMembership(userId, organizationId).catch((err) => {
+      console.warn("Could not sync membership cache:", err);
     });
   },
 };

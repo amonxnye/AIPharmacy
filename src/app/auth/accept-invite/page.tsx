@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { inviteService } from "@/lib/services/inviteService";
 import { userService } from "@/lib/services/userService";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { sendEmailVerification } from "firebase/auth";
 import type { Invite } from "@/types/invite";
 import {
   CheckCircle,
@@ -23,10 +26,10 @@ const roleLabels = {
   inventory_officer: "Inventory Officer",
 };
 
-export default function AcceptInvitePage() {
+function AcceptInviteContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, globalProfile, refreshUserProfile } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
 
   const [invite, setInvite] = useState<Invite | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
@@ -36,15 +39,17 @@ export default function AcceptInvitePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    loadInvite();
-  }, []);
-
-  const loadInvite = async () => {
+  const loadInvite = useCallback(async () => {
     const token = searchParams.get("token");
 
     if (!token) {
       setError("Invalid invitation link. No token provided.");
+      setLoading(false);
+      return;
+    }
+
+    if (!inviteService.isValidTokenFormat(token)) {
+      setError("Invalid invitation link. The token format is incorrect.");
       setLoading(false);
       return;
     }
@@ -58,7 +63,7 @@ export default function AcceptInvitePage() {
         return;
       }
 
-      const { invite: inviteData, orgId: organizationId } = result;
+      const { invite: inviteData, orgId: organizationId, organizationName } = result;
 
       // Validate invite
       const validation = inviteService.isInviteValid(inviteData);
@@ -77,30 +82,62 @@ export default function AcceptInvitePage() {
         return;
       }
 
-      // Load organization name
-      const orgDoc = await userService.getOrganization(organizationId);
-      if (orgDoc) {
-        setOrgName(orgDoc.name);
-      }
-
+      // The organization name comes from the token doc (the invitee is not yet
+      // a member, so they cannot read the organization document directly).
+      setOrgName(organizationName);
       setInvite(inviteData);
       setOrgId(organizationId);
       setLoading(false);
-    } catch (err) {
-      console.error("Error loading invite:", err);
+    } catch {
       setError("Failed to load invitation. Please try again.");
       setLoading(false);
     }
-  };
+  }, [searchParams, user]);
+
+  useEffect(() => {
+    loadInvite();
+  }, [loadInvite]);
 
   const handleAcceptInvite = async () => {
     if (!invite || !orgId || !user) return;
+
+    // Accepting an invite proves control of the invited email address, so the
+    // account's email must be verified (the security rules require it too).
+    if (!user.emailVerified) {
+      setError(
+        "Please verify your email address first. We've sent you a verification link — click it, then reload this page."
+      );
+      try {
+        await sendEmailVerification(user);
+      } catch {
+        /* non-fatal */
+      }
+      return;
+    }
 
     setAccepting(true);
     setError(null);
 
     try {
-      // Create or update user's membership
+      const token = invite.inviteToken;
+
+      // Step 1: Create the authoritative org-side membership record. It carries
+      // the invite token so the security rule can verify this is a legitimate
+      // self-service join. The rule also prevents overwriting an existing
+      // membership, so a second acceptance simply fails.
+      await setDoc(doc(db, "organizations", orgId, "users", user.uid), {
+        userId: user.uid,
+        email: user.email || invite.email,
+        name: user.displayName || user.email?.split("@")[0] || "User",
+        role: invite.role,
+        assignedOutletIds: invite.assignedOutletIds,
+        status: "active",
+        inviteToken: token,
+        invitedBy: invite.invitedBy,
+        createdAt: serverTimestamp(),
+      });
+
+      // Step 2: Mirror it into the global profile (client convenience cache).
       await userService.addMembership(user.uid, {
         organizationId: orgId,
         role: invite.role,
@@ -108,45 +145,34 @@ export default function AcceptInvitePage() {
         joinedAt: new Date(),
       });
 
-      // Create organization-specific user profile
-      await userService.createOrgUserProfile(orgId, {
-        userId: user.uid,
-        email: user.email || invite.email,
-        name: user.displayName || user.email?.split("@")[0] || "User",
-        role: invite.role,
-        assignedOutletIds: invite.assignedOutletIds,
-        status: "active",
-        createdAt: new Date(),
-        invitedBy: invite.invitedBy,
-      });
+      // Step 3: Mark the invite accepted so the token can't be reused.
+      await inviteService.acceptInvite(orgId, invite.id, token, user.uid);
 
-      // Mark invite as accepted
-      await inviteService.acceptInvite(orgId, invite.id, user.uid);
-
-      // Refresh user profile to get new membership
       await refreshUserProfile();
-
       setSuccess(true);
 
-      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
         router.push("/dashboard");
       }, 2000);
     } catch (err) {
       console.error("Error accepting invite:", err);
-      setError("Failed to accept invitation. Please try again.");
+      setError(
+        "Failed to accept invitation. It may already be used, or your email isn't verified yet."
+      );
       setAccepting(false);
     }
   };
 
   const handleSignIn = () => {
-    const token = searchParams.get("token");
-    router.push(`/auth/login?redirect=/auth/accept-invite?token=${token}`);
+    const token = searchParams.get("token") || "";
+    const redirect = encodeURIComponent(`/auth/accept-invite?token=${token}`);
+    router.push(`/auth/login?redirect=${redirect}`);
   };
 
   const handleSignUp = () => {
-    const token = searchParams.get("token");
-    router.push(`/auth/signup?redirect=/auth/accept-invite?token=${token}&email=${invite?.email || ""}`);
+    const token = searchParams.get("token") || "";
+    const redirect = encodeURIComponent(`/auth/accept-invite?token=${token}`);
+    router.push(`/auth/register?redirect=${redirect}&email=${encodeURIComponent(invite?.email || "")}`);
   };
 
   if (loading) {
@@ -196,7 +222,7 @@ export default function AcceptInvitePage() {
               Welcome Aboard!
             </h2>
             <p className="mt-2 text-gray-600">
-              You've successfully joined {orgName}. Redirecting to dashboard...
+              You&apos;ve successfully joined {orgName}. Redirecting to dashboard...
             </p>
           </div>
         </div>
@@ -213,10 +239,10 @@ export default function AcceptInvitePage() {
               <Mail className="h-8 w-8 text-teal-600" />
             </div>
             <h2 className="mt-4 text-2xl font-bold text-gray-900">
-              You're Invited!
+              You&apos;re Invited!
             </h2>
             <p className="mt-2 text-gray-600">
-              You've been invited to join <strong>{orgName}</strong>
+              You&apos;ve been invited to join <strong>{orgName}</strong>
             </p>
 
             {invite && (
@@ -271,7 +297,7 @@ export default function AcceptInvitePage() {
             Join {orgName}
           </h2>
           <p className="mt-2 text-gray-600">
-            You've been invited to join the team!
+            You&apos;ve been invited to join the team!
           </p>
 
           {invite && (
@@ -317,7 +343,7 @@ export default function AcceptInvitePage() {
           )}
 
           <p className="mt-6 text-xs text-gray-500">
-            By accepting, you'll gain access to {orgName} and its assigned
+            By accepting, you&apos;ll gain access to {orgName} and its assigned
             outlets.
           </p>
 
@@ -348,5 +374,19 @@ export default function AcceptInvitePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AcceptInvitePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
+          <Loader2 className="h-12 w-12 animate-spin text-teal-600" />
+        </div>
+      }
+    >
+      <AcceptInviteContent />
+    </Suspense>
   );
 }

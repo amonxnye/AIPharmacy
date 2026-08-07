@@ -7,9 +7,11 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  deleteUser,
+  sendEmailVerification,
   UserCredential
 } from "firebase/auth";
-import { doc, getDoc, setDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import type { GlobalUserProfile, Membership, UserRole } from "@/types/user";
 
@@ -65,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = userDoc.data();
 
       // Check if user has new multi-org structure
-      if (data.memberships && Array.isArray(data.memberships)) {
+      if (data.memberships && Array.isArray(data.memberships) && data.memberships.length > 0) {
         // New multi-org user
         const profile: GlobalUserProfile = {
           uid,
@@ -73,7 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: data.email,
           phone: data.phone,
           photoUrl: data.photoUrl,
-          memberships: data.memberships.map((m: any) => ({
+          memberships: data.memberships.map((m: { organizationId: string; role: UserRole; assignedOutletIds?: string[]; joinedAt?: { toDate: () => Date } }) => ({
             organizationId: m.organizationId,
             role: m.role,
             assignedOutletIds: m.assignedOutletIds || [],
@@ -126,13 +128,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             createdAt: profile.createdAt,
           });
         }
-      } else {
-        // Legacy single-org user - migrate to new structure
+      } else if (data.organizationId && data.organizationId !== "") {
+        // Legacy single-org user with organization - migrate to new structure
         const legacyProfile: UserProfile = {
           uid,
           email: data.email,
           name: data.name,
-          organizationId: data.organizationId || "",
+          organizationId: data.organizationId,
           role: data.role,
           assignedBranches: data.assignedBranches || [],
           createdAt: data.createdAt?.toDate() || new Date(),
@@ -140,42 +142,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         setUserProfile(legacyProfile);
 
-        // Convert to new structure
-        if (legacyProfile.organizationId) {
-          const membership: Membership = {
-            organizationId: legacyProfile.organizationId,
-            role: legacyProfile.role,
-            assignedOutletIds: legacyProfile.assignedBranches,
-            joinedAt: legacyProfile.createdAt,
-          };
+        const membership: Membership = {
+          organizationId: data.organizationId,
+          role: data.role || "owner",
+          assignedOutletIds: data.assignedBranches || [],
+          joinedAt: legacyProfile.createdAt,
+        };
 
-          setGlobalProfile({
-            uid,
-            displayName: legacyProfile.name,
-            email: legacyProfile.email,
-            memberships: [membership],
-            createdAt: legacyProfile.createdAt,
-            lastLoginAt: new Date(),
-          });
+        setGlobalProfile({
+          uid,
+          displayName: legacyProfile.name,
+          email: legacyProfile.email,
+          memberships: [membership],
+          createdAt: legacyProfile.createdAt,
+          lastLoginAt: new Date(),
+        });
 
-          setCurrentOrgId(legacyProfile.organizationId);
-          setCurrentMembership(membership);
+        setCurrentOrgId(data.organizationId);
+        setCurrentMembership(membership);
 
-          // Load org info
-          try {
-            const orgDoc = await getDoc(doc(db, "organizations", legacyProfile.organizationId));
-            if (orgDoc.exists()) {
-              const orgData = orgDoc.data();
-              setOrganizations([{
-                id: orgDoc.id,
-                name: orgData.name,
-                logo: orgData.logo || orgData.logoUrl,
-              }]);
-            }
-          } catch (error) {
-            console.error("Error loading organization:", error);
+        // Load org info
+        try {
+          const orgDoc = await getDoc(doc(db, "organizations", data.organizationId));
+          if (orgDoc.exists()) {
+            const orgData = orgDoc.data();
+            setOrganizations([{
+              id: orgDoc.id,
+              name: orgData.name,
+              logo: orgData.logo || orgData.logoUrl,
+            }]);
           }
+        } catch (error) {
+          console.error("Error loading organization:", error);
         }
+      } else {
+        // New user with no organization yet (just signed up)
+        const newUserProfile: GlobalUserProfile = {
+          uid,
+          displayName: data.displayName || data.name || "",
+          email: data.email,
+          phone: data.phone,
+          photoUrl: data.photoUrl,
+          memberships: [],
+          createdAt: data.createdAt?.toDate() || new Date(),
+          lastLoginAt: new Date(),
+        };
+
+        setGlobalProfile(newUserProfile);
+        setOrganizations([]);
+        // Don't set userProfile or currentOrgId yet - user needs to go through onboarding
       }
     } catch (error) {
       console.error("Error loading user profile:", error);
@@ -183,17 +198,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        await loadUserProfile(user.uid);
+    let cancelled = false;
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (cancelled) return;
+
+      setUser(firebaseUser);
+      if (firebaseUser) {
+        // Keep the app in a loading state while the profile resolves so
+        // guards don't briefly see an authenticated user with no profile.
+        setLoading(true);
+        await loadUserProfile(firebaseUser.uid);
       } else {
         setUserProfile(null);
+        setGlobalProfile(null);
+        setCurrentOrgId(null);
+        setCurrentMembership(null);
+        setOrganizations([]);
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -202,22 +231,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, name: string) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Create user profile in Firestore
-    await setDoc(doc(db, "users", userCredential.user.uid), {
-      email,
-      name,
-      createdAt: new Date(),
-      organizationId: "", // Will be set during onboarding
-      role: "owner",
-      assignedBranches: [],
-    });
+
+    try {
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        email,
+        displayName: name,
+        name,
+        createdAt: new Date(),
+        organizationId: "",
+        role: "owner",
+        assignedBranches: [],
+      });
+    } catch (firestoreError) {
+      await deleteUser(userCredential.user);
+      throw firestoreError;
+    }
+
+    // Send a verification email (best-effort). Verified email is required to
+    // accept staff invitations, per the Firestore security rules.
+    try {
+      await sendEmailVerification(userCredential.user);
+    } catch (verifyError) {
+      console.error("Could not send verification email:", verifyError);
+    }
 
     return userCredential;
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
     setUserProfile(null);
     setGlobalProfile(null);
     setCurrentOrgId(null);
@@ -226,6 +267,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("currentOrgId");
     }
+    await firebaseSignOut(auth);
   };
 
   const switchOrganization = (orgId: string) => {

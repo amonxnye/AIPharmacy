@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
+import { getErrorMessage } from "@/lib/errors";
 import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp } = useAuth();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -35,10 +37,12 @@ export default function RegisterPage() {
 
     try {
       await signUp(email, password, name);
-      // After signup, redirect to organization setup
-      router.push("/onboarding/organization");
-    } catch (err: any) {
-      setError(err.message || "Failed to create account. Please try again.");
+      // Invitees came from an invite link — send them back to accept it.
+      // New organization owners go to onboarding.
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/onboarding/organization");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to create account. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -179,5 +183,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center" />}>
+      <RegisterContent />
+    </Suspense>
   );
 }
