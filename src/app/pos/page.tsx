@@ -159,6 +159,21 @@ export default function POSPage() {
       setMessage({ type: "error", text: "Your role can't process sales." });
       return;
     }
+
+    // Final validation: verify subscription is still active immediately before checkout
+    // This prevents race conditions where subscription expires between UI check and sale creation
+    try {
+      const hasActive = await subscriptionService.hasActiveSubscription(orgId);
+      if (!hasActive) {
+        setMessage({ type: "error", text: "Subscription has expired. Renew to process sales." });
+        setSubscriptionExpired(true);
+        return;
+      }
+    } catch (error) {
+      setMessage({ type: "error", text: "Could not verify subscription. Please try again." });
+      return;
+    }
+
     setCheckingOut(true);
     setMessage(null);
     try {
