@@ -11,10 +11,16 @@ interface ProtectedRouteProps {
 
 function LoadingScreen() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50">
       <div className="text-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-teal-600 border-t-transparent"></div>
-        <p className="mt-4 text-gray-600">Loading...</p>
+        <div className="mb-6 flex justify-center">
+          <div className="relative h-16 w-16">
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 opacity-20 animate-pulse" />
+            <div className="absolute inset-2 rounded-full border-4 border-transparent border-t-teal-600 border-r-cyan-600 animate-spin" />
+          </div>
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900">Loading...</h2>
+        <p className="mt-2 text-sm text-gray-600">Please wait while we prepare your pharmacy dashboard</p>
       </div>
     </div>
   );
