@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getErrorMessage } from "@/lib/errors";
-import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, Lock, User, AlertCircle, Chrome } from "lucide-react";
 
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
@@ -43,6 +43,21 @@ function RegisterContent() {
       router.push(redirect || "/onboarding/organization");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to create account. Please try again."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      await signInWithGoogle();
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/onboarding/organization");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to sign up with Google. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -165,6 +180,27 @@ function RegisterContent() {
                   Create Account
                 </>
               )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Or sign up with</span>
+              </div>
+            </div>
+
+            {/* Google Sign Up */}
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-3 font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Chrome className="h-5 w-5" />
+              Sign up with Google
             </button>
           </form>
 

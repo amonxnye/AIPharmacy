@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getErrorMessage } from "@/lib/errors";
-import { LogIn, Mail, Lock, AlertCircle } from "lucide-react";
+import { LogIn, Mail, Lock, AlertCircle, Chrome } from "lucide-react";
 
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -28,6 +28,22 @@ function LoginContent() {
       router.push(isSafeRedirect ? redirect : "/dashboard");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to sign in. Please check your credentials."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      await signInWithGoogle();
+      const redirect = searchParams.get("redirect");
+      const isSafeRedirect = redirect && redirect.startsWith("/") && !redirect.startsWith("//");
+      router.push(isSafeRedirect ? redirect : "/dashboard");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to sign in with Google. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -120,6 +136,27 @@ function LoginContent() {
                   Sign In
                 </>
               )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Or continue with</span>
+              </div>
+            </div>
+
+            {/* Google Sign In */}
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-3 font-medium text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Chrome className="h-5 w-5" />
+              Sign in with Google
             </button>
           </form>
 

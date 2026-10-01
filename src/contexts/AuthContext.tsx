@@ -9,7 +9,9 @@ import {
   signOut as firebaseSignOut,
   deleteUser,
   sendEmailVerification,
-  UserCredential
+  UserCredential,
+  signInWithPopup,
+  GoogleAuthProvider
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -43,6 +45,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<UserCredential>;
   signUp: (email: string, password: string, name: string) => Promise<UserCredential>;
+  signInWithGoogle: () => Promise<UserCredential>;
   signOut: () => Promise<void>;
   switchOrganization: (orgId: string) => void;  // New
   refreshUserProfile: () => Promise<void>;
@@ -230,7 +233,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    let userCredential: UserCredential | null = null;
+
+    try {
+      userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    } catch (authError) {
+      throw new Error(`Authentication failed: ${authError instanceof Error ? authError.message : "Unable to create account"}`);
+    }
 
     try {
       await setDoc(doc(db, "users", userCredential.user.uid), {
@@ -244,7 +253,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (firestoreError) {
       await deleteUser(userCredential.user);
-      throw firestoreError;
+      throw new Error(`Account creation failed: ${firestoreError instanceof Error ? firestoreError.message : "Could not create user profile"}`);
     }
 
     // Send a verification email (best-effort). Verified email is required to
@@ -256,6 +265,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     return userCredential;
+  };
+
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+
+      // Check if user document exists, if not create it
+      const userDoc = await getDoc(doc(db, "users", result.user.uid));
+      if (!userDoc.exists()) {
+        await setDoc(doc(db, "users", result.user.uid), {
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split("@")[0] || "User",
+          name: result.user.displayName || "",
+          photoUrl: result.user.photoURL,
+          createdAt: new Date(),
+          organizationId: "",
+          role: "owner",
+          assignedBranches: [],
+        });
+      }
+
+      return result;
+    } catch (error) {
+      throw new Error(`Google sign-in failed: ${error instanceof Error ? error.message : "Unable to sign in with Google"}`);
+    }
   };
 
   const signOut = async () => {
@@ -317,6 +354,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signIn,
     signUp,
+    signInWithGoogle,
     signOut,
     switchOrganization,
     refreshUserProfile,
