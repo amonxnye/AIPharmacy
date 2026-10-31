@@ -222,8 +222,8 @@ export default function POSPage() {
     return (
       <div className="flex h-96 items-center justify-center text-center">
         <div>
-          <AlertCircle className="mx-auto h-10 w-10 text-orange-500" />
-          <p className="mt-3 text-gray-600">
+          <AlertCircle className="mx-auto h-8 w-8 text-gray-300" />
+          <p className="mt-3 text-sm text-gray-600">
             No outlet selected. Create an outlet to start selling.
           </p>
         </div>
@@ -236,24 +236,24 @@ export default function POSPage() {
       {/* Left — product selection */}
       <div className="flex flex-1 flex-col space-y-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Point of Sale</h1>
+          <h1 className="text-3xl font-semibold text-gray-900">Point of Sale</h1>
           <p className="mt-1 text-sm text-gray-500">
             {branch.name} · prices in {currency}
           </p>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search products by name, SKU, or barcode..."
+            placeholder="Search by name, SKU, or barcode"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 py-3 pl-12 pr-4 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            className="w-full rounded-lg border border-gray-300 py-3 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-900/5">
+        <div className="flex-1 overflow-y-auto rounded-lg border border-gray-200 bg-white p-4">
           {loading ? (
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
@@ -263,7 +263,7 @@ export default function POSPage() {
               No products yet. Add products in Inventory to sell them here.
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
               {filteredProducts.map((product) => {
                 const available = stockByProduct[product.id] || 0;
                 const price = priceByProduct[product.id] || 0;
@@ -273,16 +273,13 @@ export default function POSPage() {
                     key={product.id}
                     onClick={() => addToCart(product)}
                     disabled={out}
-                    className="rounded-lg border-2 border-gray-200 p-4 text-left transition-all hover:border-teal-500 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                    className="rounded-lg border border-gray-200 p-4 text-left hover:border-teal-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <div className="mb-2 flex h-24 items-center justify-center rounded-lg bg-gradient-to-br from-teal-50 to-teal-100">
-                      <span className="text-4xl">💊</span>
-                    </div>
-                    <h3 className="font-medium text-gray-900">{product.name}</h3>
-                    <p className={`mt-1 text-sm ${out ? "text-red-500" : "text-gray-500"}`}>
-                      {out ? "Out of stock" : `Stock: ${available}`}
+                    <h3 className="text-sm font-medium text-gray-900">{product.name}</h3>
+                    <p className={`mt-1 text-xs tabular-nums ${out ? "text-red-700" : "text-gray-500"}`}>
+                      {out ? "Out of stock" : `${available} in stock`}
                     </p>
-                    <p className="mt-2 text-lg font-bold text-teal-600">
+                    <p className="mt-4 text-base font-semibold text-gray-900 tabular-nums">
                       {formatCurrency(price, currency)}
                     </p>
                   </button>
@@ -294,56 +291,51 @@ export default function POSPage() {
       </div>
 
       {/* Right — cart & checkout */}
-      <div className="flex w-96 flex-col rounded-xl bg-white shadow-lg ring-1 ring-gray-900/5">
-        <div className="border-b border-gray-200 p-6">
-          <h2 className="text-xl font-bold text-gray-900">Current Sale</h2>
+      <div className="flex w-96 flex-col rounded-lg border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <h2 className="text-sm font-semibold text-gray-900">Current sale</h2>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
           {cart.length === 0 ? (
             <div className="flex h-full items-center justify-center text-center">
-              <div>
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-                  <Search className="h-8 w-8 text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-500">
-                  No items in cart. Search and add products to get started.
-                </p>
-              </div>
+              <p className="text-sm text-gray-500">
+                Cart is empty. Select a product to add it.
+              </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="divide-y divide-gray-100">
               {cart.map((item) => (
                 <div
                   key={item.product.id}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 p-3"
+                  className="flex items-center gap-3 py-3 first:pt-0"
                 >
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.product.name}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900">{item.product.name}</p>
+                    <p className="text-xs text-gray-500 tabular-nums">
                       {formatCurrency(item.price, currency)} each
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => updateQuantity(item.product.id, -1)}
-                      className="rounded-lg bg-gray-100 p-1 hover:bg-gray-200"
+                      className="rounded border border-gray-200 p-1 text-gray-600 hover:bg-gray-100"
                     >
                       <Minus className="h-4 w-4" />
                     </button>
-                    <span className="w-8 text-center font-medium tabular-nums">
+                    <span className="w-8 text-center text-sm font-medium tabular-nums">
                       {item.quantity}
                     </span>
                     <button
                       onClick={() => updateQuantity(item.product.id, 1)}
                       disabled={item.quantity >= item.available}
-                      className="rounded-lg bg-gray-100 p-1 hover:bg-gray-200 disabled:opacity-40"
+                      className="rounded border border-gray-200 p-1 text-gray-600 hover:bg-gray-100 disabled:opacity-40"
                     >
                       <Plus className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => removeFromCart(item.product.id)}
-                      className="ml-2 rounded-lg bg-red-100 p-1 text-red-600 hover:bg-red-200"
+                      className="ml-2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-700"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -357,10 +349,10 @@ export default function POSPage() {
         <div className="border-t border-gray-200 p-6">
           {message && (
             <div
-              className={`mb-3 flex items-center gap-2 rounded-lg p-2.5 text-sm ${
+              className={`mb-4 flex items-center gap-2 rounded-lg border p-3 text-sm ${
                 message.type === "success"
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-700"
+                  ? "border-teal-200 bg-teal-50 text-teal-800"
+                  : "border-red-200 bg-red-50 text-red-700"
               }`}
             >
               {message.type === "success" ? (
@@ -372,12 +364,12 @@ export default function POSPage() {
             </div>
           )}
 
-          <div className="mb-3">
+          <div className="mb-4">
             <label className="mb-1 block text-xs font-medium text-gray-500">Payment method</label>
             <select
               value={paymentMethod}
               onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
             >
               <option value="cash">Cash</option>
               <option value="mobile_money">Mobile Money</option>
@@ -388,20 +380,20 @@ export default function POSPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Subtotal</span>
-              <span className="font-medium tabular-nums">{formatCurrency(subtotal, currency)}</span>
+              <span className="font-medium text-gray-900 tabular-nums">{formatCurrency(subtotal, currency)}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Tax ({(taxRate * 100).toFixed(1)}%)</span>
-              <span className="font-medium tabular-nums">{formatCurrency(tax, currency)}</span>
+              <span className="font-medium text-gray-900 tabular-nums">{formatCurrency(tax, currency)}</span>
             </div>
-            <div className="flex justify-between border-t border-gray-200 pt-2 text-lg font-bold">
-              <span>Total</span>
-              <span className="text-teal-600 tabular-nums">{formatCurrency(total, currency)}</span>
+            <div className="flex items-baseline justify-between border-t border-gray-200 pt-3">
+              <span className="text-sm font-medium text-gray-900">Total</span>
+              <span className="text-3xl font-semibold text-gray-900 tabular-nums">{formatCurrency(total, currency)}</span>
             </div>
           </div>
 
           {subscriptionExpired && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>Subscription expired. Renew to process sales.</span>
             </div>
@@ -410,21 +402,22 @@ export default function POSPage() {
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || checkingOut || subscriptionExpired}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
           >
             {checkingOut ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Processing...
               </>
             ) : subscriptionExpired ? (
               <>
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="h-4 w-4" />
                 Subscription Expired
               </>
             ) : (
               <>
-                <CreditCard className="h-5 w-5" />
+                <CreditCard className="h-4 w-4" />
+
                 Complete Sale
               </>
             )}

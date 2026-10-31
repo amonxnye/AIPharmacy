@@ -41,21 +41,16 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 text-white font-bold text-xl shadow-lg">
-            Ai
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Reset Password</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-semibold text-gray-900">Reset Password</h1>
+          <p className="mt-1 text-sm text-gray-500">
             Enter your email and we&apos;ll send you a link to reset your password.
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/5">
+        <div className="rounded-lg border border-gray-200 bg-white p-8">
           {success ? (
             <div className="text-center">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                <CheckCircle2 className="h-6 w-6 text-green-600" />
-              </div>
+              <CheckCircle2 className="mx-auto h-6 w-6 text-teal-700" />
               <h2 className="mt-4 text-lg font-semibold text-gray-900">
                 Check your email
               </h2>
@@ -75,7 +70,7 @@ export default function ResetPasswordPage() {
           ) : (
             <>
               {error && (
-                <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
+                <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
                   <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   {error}
                 </div>
@@ -90,14 +85,14 @@ export default function ResetPasswordPage() {
                     Email Address
                   </label>
                   <div className="relative mt-1">
-                    <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                     <input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                      className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -106,11 +101,11 @@ export default function ResetPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
                 >
                   {loading ? (
                     <>
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                       Sending...
                     </>
                   ) : (

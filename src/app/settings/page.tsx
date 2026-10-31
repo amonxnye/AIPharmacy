@@ -122,12 +122,12 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <h1 className="text-3xl font-semibold text-gray-900">Settings</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Manage your organization and account settings
+          {organization?.name || "Organization and account"}
         </p>
       </div>
 
@@ -140,13 +140,13 @@ export default function SettingsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium ${
                   activeTab === tab.id
-                    ? "border-teal-600 text-teal-600"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    ? "border-teal-600 text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900"
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-4 w-4" />
                 {tab.label}
               </button>
             );
@@ -155,12 +155,12 @@ export default function SettingsPage() {
       </div>
 
       {/* Tab Content */}
-      <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         {/* Organization Settings */}
         {activeTab === "organization" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Organization Information
               </h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -174,7 +174,7 @@ export default function SettingsPage() {
                   Organization Name
                 </label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-gray-400" />
+                  <Building2 className="h-4 w-4 text-gray-400" />
                   <input
                     type="text"
                     disabled={saving}
@@ -182,7 +182,7 @@ export default function SettingsPage() {
                     onChange={(e) =>
                       setOrgSettings({ ...orgSettings, name: e.target.value })
                     }
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:bg-gray-50 disabled:text-gray-500"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-gray-50 disabled:text-gray-500"
                   />
                 </div>
               </div>
@@ -192,14 +192,14 @@ export default function SettingsPage() {
                   Email
                 </label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-4 w-4 text-gray-400" />
                   <input
                     type="email"
                     value={orgSettings.email}
                     onChange={(e) =>
                       setOrgSettings({ ...orgSettings, email: e.target.value })
                     }
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   />
                 </div>
               </div>
@@ -209,14 +209,14 @@ export default function SettingsPage() {
                   Phone
                 </label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Phone className="h-5 w-5 text-gray-400" />
+                  <Phone className="h-4 w-4 text-gray-400" />
                   <input
                     type="tel"
                     value={orgSettings.phone}
                     onChange={(e) =>
                       setOrgSettings({ ...orgSettings, phone: e.target.value })
                     }
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   />
                 </div>
               </div>
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                   Currency
                 </label>
                 <div className="mt-1 flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-gray-400" />
+                  <DollarSign className="h-4 w-4 text-gray-400" />
                   <select
                     value={orgSettings.currency}
                     onChange={(e) =>
@@ -235,7 +235,7 @@ export default function SettingsPage() {
                         currency: e.target.value,
                       })
                     }
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   >
                     <optgroup label="Africa">
                       <option value="UGX">UGX - Ugandan Shilling</option>
@@ -283,7 +283,7 @@ export default function SettingsPage() {
                   Tax Rate (%)
                 </label>
                 <div className="mt-1 flex items-center gap-2">
-                  <Percent className="h-5 w-5 text-gray-400" />
+                  <Percent className="h-4 w-4 text-gray-400" />
                   <input
                     type="number"
                     value={orgSettings.taxRate}
@@ -296,7 +296,7 @@ export default function SettingsPage() {
                     step="0.01"
                     min="0"
                     max="100"
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   />
                 </div>
               </div>
@@ -306,7 +306,7 @@ export default function SettingsPage() {
                   Address
                 </label>
                 <div className="mt-1 flex items-start gap-2">
-                  <MapPin className="h-5 w-5 text-gray-400 mt-2" />
+                  <MapPin className="h-4 w-4 text-gray-400 mt-2" />
                   <textarea
                     value={orgSettings.address}
                     onChange={(e) =>
@@ -316,7 +316,7 @@ export default function SettingsPage() {
                       })
                     }
                     rows={3}
-                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   />
                 </div>
               </div>
@@ -328,7 +328,7 @@ export default function SettingsPage() {
         {activeTab === "profile" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Personal Information
               </h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -350,7 +350,7 @@ export default function SettingsPage() {
                       name: e.target.value,
                     })
                   }
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                 />
               </div>
 
@@ -362,7 +362,7 @@ export default function SettingsPage() {
                   type="email"
                   value={profileSettings.email}
                   disabled
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-500"
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Email cannot be changed
@@ -382,7 +382,7 @@ export default function SettingsPage() {
                       phone: e.target.value,
                     })
                   }
-                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                 />
               </div>
 
@@ -394,7 +394,7 @@ export default function SettingsPage() {
                   type="text"
                   value={userProfile?.role || ""}
                   disabled
-                  className="mt-1 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-gray-500 capitalize"
+                  className="mt-1 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-500 capitalize"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Contact your administrator to change your role
@@ -408,7 +408,7 @@ export default function SettingsPage() {
         {activeTab === "notifications" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Notification Preferences
               </h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -419,7 +419,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">Low Stock Alerts</h3>
+                  <h3 className="text-sm font-medium text-gray-900">Low Stock Alerts</h3>
                   <p className="text-sm text-gray-500">
                     Get notified when products are running low
                   </p>
@@ -433,13 +433,13 @@ export default function SettingsPage() {
                       lowStock: e.target.checked,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">
+                  <h3 className="text-sm font-medium text-gray-900">
                     Expiring Products
                   </h3>
                   <p className="text-sm text-gray-500">
@@ -455,13 +455,13 @@ export default function SettingsPage() {
                       expiringProducts: e.target.checked,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">New Orders</h3>
+                  <h3 className="text-sm font-medium text-gray-900">New Orders</h3>
                   <p className="text-sm text-gray-500">
                     Get notified about new orders
                   </p>
@@ -475,13 +475,13 @@ export default function SettingsPage() {
                       newOrders: e.target.checked,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">Daily Reports</h3>
+                  <h3 className="text-sm font-medium text-gray-900">Daily Reports</h3>
                   <p className="text-sm text-gray-500">
                     Receive daily sales and inventory reports
                   </p>
@@ -495,13 +495,13 @@ export default function SettingsPage() {
                       dailyReport: e.target.checked,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">Weekly Reports</h3>
+                  <h3 className="text-sm font-medium text-gray-900">Weekly Reports</h3>
                   <p className="text-sm text-gray-500">
                     Receive weekly sales and inventory reports
                   </p>
@@ -515,13 +515,13 @@ export default function SettingsPage() {
                       weeklyReport: e.target.checked,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
               </div>
 
               <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4">
                 <div>
-                  <h3 className="font-medium text-gray-900">Monthly Reports</h3>
+                  <h3 className="text-sm font-medium text-gray-900">Monthly Reports</h3>
                   <p className="text-sm text-gray-500">
                     Receive monthly sales and inventory reports
                   </p>
@@ -535,7 +535,7 @@ export default function SettingsPage() {
                       monthlyReport: e.target.checked,
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
               </div>
             </div>
@@ -546,7 +546,7 @@ export default function SettingsPage() {
         {activeTab === "security" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Security Settings
               </h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -556,7 +556,7 @@ export default function SettingsPage() {
 
             <div className="space-y-4">
               <div className="rounded-lg border border-gray-200 p-4">
-                <h3 className="font-medium text-gray-900">Change Password</h3>
+                <h3 className="text-sm font-medium text-gray-900">Change Password</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   Update your password to keep your account secure
                 </p>
@@ -567,7 +567,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
-                <h3 className="font-medium text-gray-900">
+                <h3 className="text-sm font-medium text-gray-900">
                   Two-Factor Authentication
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
@@ -580,7 +580,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
-                <h3 className="font-medium text-gray-900">Active Sessions</h3>
+                <h3 className="text-sm font-medium text-gray-900">Active Sessions</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   Manage your active sessions across devices
                 </p>
@@ -597,7 +597,7 @@ export default function SettingsPage() {
         {activeTab === "billing" && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-sm font-semibold text-gray-900">
                 Billing & Subscription
               </h2>
               <p className="mt-1 text-sm text-gray-500">
@@ -609,10 +609,10 @@ export default function SettingsPage() {
               <div className="rounded-lg border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="font-medium text-gray-900">Current Plan</h3>
+                    <h3 className="text-sm font-medium text-gray-900">Current Plan</h3>
                     <p className="mt-1 text-sm text-gray-500">Free Plan</p>
                   </div>
-                  <span className="rounded-full bg-teal-100 px-3 py-1 text-sm font-medium text-teal-700">
+                  <span className="text-sm font-medium text-gray-900">
                     Active
                   </span>
                 </div>
@@ -623,7 +623,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
-                <h3 className="font-medium text-gray-900">Payment Method</h3>
+                <h3 className="text-sm font-medium text-gray-900">Payment Method</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   No payment method added
                 </p>
@@ -634,7 +634,7 @@ export default function SettingsPage() {
               </div>
 
               <div className="rounded-lg border border-gray-200 p-4">
-                <h3 className="font-medium text-gray-900">Billing History</h3>
+                <h3 className="text-sm font-medium text-gray-900">Billing History</h3>
                 <p className="mt-1 text-sm text-gray-500">
                   View your past invoices and payments
                 </p>
@@ -651,7 +651,7 @@ export default function SettingsPage() {
         {(activeTab === "organization" || activeTab === "profile" || activeTab === "notifications") && (
           <div className="flex items-center justify-between border-t border-gray-200 pt-6">
             {saveMessage ? (
-              <div className={`flex items-center gap-2 text-sm ${saveMessage.type === "success" ? "text-green-700" : "text-red-700"}`}>
+              <div className={`flex items-center gap-2 text-sm ${saveMessage.type === "success" ? "text-teal-700" : "text-red-700"}`}>
                 {saveMessage.type === "success" ? (
                   <CheckCircle2 className="h-4 w-4" />
                 ) : (
@@ -665,9 +665,10 @@ export default function SettingsPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-2 rounded-lg bg-teal-600 px-6 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
             >
-              <Save className="h-5 w-5" />
+              <Save className="h-4 w-4" />
+
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </div>
