@@ -30,11 +30,16 @@ export const subscriptionService = {
     renewalEnabled = false
   ): Promise<Subscription> {
     const subRef = doc(collection(db, "organizations", organizationId, "subscription"));
+
+    // Normalize endDate to end-of-day (23:59:59) to ensure subscription is active through the entire day
+    const normalizedEndDate = new Date(endDate);
+    normalizedEndDate.setHours(23, 59, 59, 999);
+
     const subscription: Subscription = {
       id: subRef.id,
       organizationId,
       startDate,
-      endDate,
+      endDate: normalizedEndDate,
       status: "active",
       paymentReference,
       renewalEnabled,
@@ -44,7 +49,7 @@ export const subscriptionService = {
     await setDoc(subRef, {
       organizationId,
       startDate: Timestamp.fromDate(startDate),
-      endDate: Timestamp.fromDate(endDate),
+      endDate: Timestamp.fromDate(normalizedEndDate),
       status: "active",
       paymentReference,
       renewalEnabled,
@@ -82,6 +87,8 @@ export const subscriptionService = {
   async hasActiveSubscription(organizationId: string): Promise<boolean> {
     const subscription = await this.getActiveSubscription(organizationId);
     if (!subscription) return false;
+    // Subscription is active if current time is <= endDate AND status is active
+    // endDate is normalized to 23:59:59, so subscription is active through entire day
     return new Date() <= subscription.endDate && subscription.status === "active";
   },
 
@@ -131,10 +138,15 @@ export const subscriptionService = {
   },
 
   isSubscriptionExpired(endDate: Date): boolean {
+    // Subscription is expired when current time is AFTER endDate (23:59:59)
+    // On endDate itself, subscription is still active (returns false)
     return new Date() > endDate;
   },
 
   daysUntilExpiry(endDate: Date): number {
+    // Calculate days remaining until subscription expires (endDate at 23:59:59)
+    // Returns positive number while active, 0 on expiry day, negative after expiry
+    // Math.ceil ensures partial days count toward remaining days
     const now = new Date();
     const diff = endDate.getTime() - now.getTime();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));

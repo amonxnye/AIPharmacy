@@ -177,7 +177,7 @@ function AcceptInviteContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
           <Loader2 className="mx-auto h-12 w-12 animate-spin text-teal-600" />
           <p className="mt-4 text-gray-600">Loading invitation...</p>
@@ -188,19 +188,17 @@ function AcceptInviteContent() {
 
   if (error) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-              <XCircle className="h-8 w-8 text-red-600" />
-            </div>
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">
+            <XCircle className="mx-auto h-8 w-8 text-red-700" />
+            <h2 className="mt-4 text-2xl font-semibold text-gray-900">
               Invalid Invitation
             </h2>
-            <p className="mt-2 text-gray-600">{error}</p>
+            <p className="mt-1 text-sm text-gray-500">{error}</p>
             <button
               onClick={() => router.push("/")}
-              className="mt-6 rounded-lg bg-teal-600 px-6 py-2.5 font-medium text-white hover:bg-teal-700"
+              className="mt-6 rounded-lg bg-teal-600 px-6 py-2 font-medium text-white hover:bg-teal-700"
             >
               Go to Home
             </button>
@@ -212,16 +210,14 @@ function AcceptInviteContent() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">
+            <CheckCircle className="mx-auto h-8 w-8 text-teal-700" />
+            <h2 className="mt-4 text-2xl font-semibold text-gray-900">
               Welcome Aboard!
             </h2>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1 text-sm text-gray-500">
               You&apos;ve successfully joined {orgName}. Redirecting to dashboard...
             </p>
           </div>
@@ -232,16 +228,14 @@ function AcceptInviteContent() {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8">
           <div className="text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-100">
-              <Mail className="h-8 w-8 text-teal-600" />
-            </div>
-            <h2 className="mt-4 text-2xl font-bold text-gray-900">
+            <Mail className="mx-auto h-8 w-8 text-teal-700" />
+            <h2 className="mt-4 text-2xl font-semibold text-gray-900">
               You&apos;re Invited!
             </h2>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-1 text-sm text-gray-500">
               You&apos;ve been invited to join <strong>{orgName}</strong>
             </p>
 
@@ -269,13 +263,13 @@ function AcceptInviteContent() {
             <div className="mt-6 space-y-3">
               <button
                 onClick={handleSignIn}
-                className="w-full rounded-lg bg-teal-600 px-6 py-2.5 font-medium text-white hover:bg-teal-700"
+                className="w-full rounded-lg bg-teal-600 px-6 py-2 font-medium text-white hover:bg-teal-700"
               >
                 Sign In
               </button>
               <button
                 onClick={handleSignUp}
-                className="w-full rounded-lg border border-gray-300 bg-white px-6 py-2.5 font-medium text-gray-700 hover:bg-gray-50"
+                className="w-full rounded-lg border border-gray-300 bg-white px-6 py-2 font-medium text-gray-700 hover:bg-gray-50"
               >
                 Create Account
               </button>
@@ -287,16 +281,14 @@ function AcceptInviteContent() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-100">
-            <Mail className="h-8 w-8 text-teal-600" />
-          </div>
-          <h2 className="mt-4 text-2xl font-bold text-gray-900">
+          <Mail className="mx-auto h-8 w-8 text-teal-700" />
+          <h2 className="mt-4 text-2xl font-semibold text-gray-900">
             Join {orgName}
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-1 text-sm text-gray-500">
             You&apos;ve been invited to join the team!
           </p>
 
@@ -350,16 +342,16 @@ function AcceptInviteContent() {
           <button
             onClick={handleAcceptInvite}
             disabled={accepting}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-6 py-2.5 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-6 py-2 font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {accepting ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Accepting...
               </>
             ) : (
               <>
-                <CheckCircle className="h-5 w-5" />
+                <CheckCircle className="h-4 w-4" />
                 Accept Invitation
               </>
             )}
@@ -367,7 +359,7 @@ function AcceptInviteContent() {
 
           <button
             onClick={() => router.push("/")}
-            className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-6 py-2.5 font-medium text-gray-700 hover:bg-gray-50"
+            className="mt-3 w-full rounded-lg border border-gray-300 bg-white px-6 py-2 font-medium text-gray-700 hover:bg-gray-50"
           >
             Decline
           </button>
@@ -381,7 +373,7 @@ export default function AcceptInvitePage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-teal-50 to-blue-50">
+        <div className="flex min-h-screen items-center justify-center bg-gray-50">
           <Loader2 className="h-12 w-12 animate-spin text-teal-600" />
         </div>
       }

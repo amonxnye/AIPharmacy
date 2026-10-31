@@ -8,7 +8,7 @@ import { productService } from "@/lib/services/productService";
 import { formatCurrency } from "@/lib/format";
 import PurchaseOrderModal from "@/components/modals/PurchaseOrderModal";
 import GoodsReceiptModal from "@/components/modals/GoodsReceiptModal";
-import { Plus, Package, Truck, AlertCircle, Loader2, CheckCircle } from "lucide-react";
+import { Plus, Package, Truck, Loader2 } from "lucide-react";
 import type { PurchaseOrder, GoodsReceipt } from "@/types/procurement";
 import type { Product } from "@/types/product";
 
@@ -76,21 +76,21 @@ export default function ProcurementPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Procurement</h1>
-          <p className="mt-1 text-sm text-gray-500">Manage purchase orders and stock receipt</p>
+          <h1 className="text-3xl font-semibold text-gray-900">Procurement</h1>
+          <p className="mt-1 text-sm text-gray-500">{selectedBranch ? selectedBranch.name : "Purchase orders and goods receipts"}</p>
         </div>
         <button
           onClick={() => {
             setSelectedPO(null);
             setShowPOModal(true);
           }}
-          className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-teal-700"
+          className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-4 w-4" />
           New Purchase Order
         </button>
       </div>
@@ -107,13 +107,13 @@ export default function ProcurementPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as "po" | "grn")}
-                className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium ${
                   activeTab === tab.id
-                    ? "border-teal-600 text-teal-600"
-                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    ? "border-teal-600 text-gray-900"
+                    : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-900"
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-4 w-4" />
                 {tab.label}
               </button>
             );
@@ -125,10 +125,10 @@ export default function ProcurementPage() {
       {activeTab === "po" && (
         <div className="space-y-4">
           {pos.length === 0 ? (
-            <div className="rounded-xl bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
-              <Package className="mx-auto h-12 w-12 text-gray-400" />
+            <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+              <Package className="mx-auto h-8 w-8 text-gray-300" />
               <h3 className="mt-2 text-sm font-semibold text-gray-900">No purchase orders</h3>
-              <p className="mt-1 text-sm text-gray-500">Get started by creating your first PO</p>
+              <p className="mt-1 text-sm text-gray-500">Orders you place with suppliers appear here.</p>
               <button
                 onClick={() => setShowPOModal(true)}
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
@@ -138,9 +138,9 @@ export default function ProcurementPage() {
               </button>
             </div>
           ) : (
-            <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
               <table className="w-full">
-                <thead className="border-b border-gray-200 bg-gray-50">
+                <thead className="border-b border-gray-200">
                   <tr>
                     {[
                       "PO Number",
@@ -152,47 +152,41 @@ export default function ProcurementPage() {
                     ].map((h) => (
                       <th
                         key={h}
-                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                        className={`px-6 py-3 text-xs font-medium text-gray-500 ${h === "Items" || h === "Total" || h === "Action" ? "text-right" : "text-left"}`}
                       >
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-gray-100">
                   {pos.map((po) => (
-                    <tr key={po.id} className="transition-colors hover:bg-gray-50">
+                    <tr key={po.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <span className="font-medium text-gray-900">{po.poNumber}</span>
+                        <span className="text-sm font-medium text-gray-900">{po.poNumber}</span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">{po.supplier}</td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{po.items.length}</td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 text-right text-sm text-gray-600 tabular-nums">{po.items.length}</td>
+                      <td className="px-6 py-4 text-right text-sm font-medium text-gray-900 tabular-nums">
                         {formatCurrency(po.total, organization?.currency || "UGX")}
                       </td>
                       <td className="px-6 py-4">
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium ${
-                            po.status === "received"
-                              ? "bg-green-100 text-green-700"
-                              : po.status === "ordered"
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-gray-100 text-gray-700"
+                          className={`text-sm ${
+                            po.status === "ordered" ? "font-medium text-gray-900" : "text-gray-500"
                           }`}
                         >
-                          {po.status === "received" && <CheckCircle className="h-3 w-3" />}
-                          {po.status === "ordered" && <AlertCircle className="h-3 w-3" />}
                           {po.status.charAt(0).toUpperCase() + po.status.slice(1)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm">
+                      <td className="px-6 py-4 text-right text-sm">
                         {po.status === "ordered" && (
                           <button
                             onClick={() => {
                               setSelectedPO(po);
                               setShowGRNModal(true);
                             }}
-                            className="text-teal-600 hover:text-teal-700 font-medium"
+                            className="font-medium text-teal-700 hover:text-teal-800"
                           >
                             Receive
                           </button>
@@ -214,49 +208,45 @@ export default function ProcurementPage() {
       {activeTab === "grn" && (
         <div className="space-y-4">
           {grns.length === 0 ? (
-            <div className="rounded-xl bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
-              <Truck className="mx-auto h-12 w-12 text-gray-400" />
+            <div className="rounded-lg border border-gray-200 bg-white p-12 text-center">
+              <Truck className="mx-auto h-8 w-8 text-gray-300" />
               <h3 className="mt-2 text-sm font-semibold text-gray-900">
                 No goods receipts yet
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Goods receipts are created when you receive PO shipments
+                A receipt is created when you receive a purchase order.
               </p>
             </div>
           ) : (
-            <div className="rounded-xl bg-white shadow-sm ring-1 ring-gray-900/5">
+            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
               <table className="w-full">
-                <thead className="border-b border-gray-200 bg-gray-50">
+                <thead className="border-b border-gray-200">
                   <tr>
                     {["GRN Number", "PO Number", "Items", "Received At", "Status"].map((h) => (
                       <th
                         key={h}
-                        className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+                        className={`px-6 py-3 text-xs font-medium text-gray-500 ${h === "Items" ? "text-right" : "text-left"}`}
                       >
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-gray-100">
                   {grns.map((grn) => (
-                    <tr key={grn.id} className="transition-colors hover:bg-gray-50">
+                    <tr key={grn.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
-                        <span className="font-medium text-gray-900">{grn.grnNumber}</span>
+                        <span className="text-sm font-medium text-gray-900">{grn.grnNumber}</span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {pos.find((po) => po.id === grn.poId)?.poNumber || grn.poId}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">{grn.items.length}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
+                      <td className="px-6 py-4 text-right text-sm text-gray-600 tabular-nums">{grn.items.length}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 tabular-nums">
                         {new Date(grn.receivedAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                          <CheckCircle className="h-3 w-3" />
-                          Completed
-                        </span>
-                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">Completed</td>
+
                     </tr>
                   ))}
                 </tbody>

@@ -16,19 +16,10 @@ import {
   Mail,
   Edit,
   Trash2,
-  CheckCircle,
-  Clock,
   X,
   Loader2,
 } from "lucide-react";
 
-const roleColors: Record<UserRole, string> = {
-  owner: "bg-purple-100 text-purple-700",
-  manager: "bg-blue-100 text-blue-700",
-  pharmacist: "bg-green-100 text-green-700",
-  cashier: "bg-yellow-100 text-yellow-700",
-  inventory_officer: "bg-orange-100 text-orange-700",
-};
 
 const roleLabels: Record<UserRole, string> = {
   owner: "Owner",
@@ -137,40 +128,40 @@ export default function StaffPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Staff</h1>
+          <h1 className="text-3xl font-semibold text-gray-900">Staff</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage your team members and their roles
+            Team members, roles, and outlet access
           </p>
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
-          className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white shadow-sm transition-all hover:bg-teal-700"
+          className="flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
         >
-          <Plus className="h-5 w-5" />
-          Invite Staff Member
+          <Plus className="h-4 w-4" />
+          Invite staff
         </button>
       </div>
 
       {/* Search / filter */}
       <div className="flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name or email..."
-            className="w-full rounded-lg border border-gray-300 py-2.5 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+            placeholder="Search by name or email"
+            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
           />
         </div>
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2.5 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+          className="rounded-lg border border-gray-300 px-4 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
         >
           <option value="all">All Roles</option>
           {Object.entries(roleLabels).map(([value, label]) => (
@@ -183,21 +174,20 @@ export default function StaffPage() {
 
       {/* Pending invites */}
       {pendingInvites.length > 0 && (
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Clock className="h-5 w-5 text-amber-500" />
-            Pending Invitations ({pendingInvites.length})
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">
+            Pending invitations <span className="font-normal text-gray-500 tabular-nums">{pendingInvites.length}</span>
           </h2>
-          <div className="space-y-2">
+          <div className="divide-y divide-gray-100">
             {pendingInvites.map((invite) => (
               <div
                 key={invite.id}
-                className="flex items-center justify-between rounded-lg border border-gray-200 p-3"
+                className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
               >
                 <div className="flex items-center gap-3">
                   <Mail className="h-4 w-4 text-gray-400" />
                   <div>
-                    <p className="font-medium text-gray-900">{invite.email}</p>
+                    <p className="text-sm font-medium text-gray-900">{invite.email}</p>
                     <p className="text-xs text-gray-500">
                       {roleLabels[invite.role]} · expires{" "}
                       {invite.expiresAt.toLocaleDateString()}
@@ -207,7 +197,7 @@ export default function StaffPage() {
                 <button
                   onClick={() => handleRevoke(invite)}
                   disabled={busyId === invite.id}
-                  className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-red-700 disabled:opacity-50"
                 >
                   <X className="h-4 w-4" />
                   Revoke
@@ -221,44 +211,40 @@ export default function StaffPage() {
       {/* Staff grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredStaff.length === 0 ? (
-          <div className="col-span-full rounded-xl bg-white p-12 text-center shadow-sm ring-1 ring-gray-900/5">
-            <Users className="mx-auto h-12 w-12 text-gray-400" />
+          <div className="col-span-full rounded-lg border border-gray-200 bg-white p-12 text-center">
+            <Users className="mx-auto h-8 w-8 text-gray-300" />
             <h3 className="mt-2 text-sm font-semibold text-gray-900">
               No staff members found
             </h3>
             <p className="mt-1 text-sm text-gray-500">
               {searchTerm || roleFilter !== "all"
-                ? "Try adjusting your filters"
-                : "Invite your first team member to get started"}
+                ? "No one matches these filters."
+                : "Invite a team member to give them access."}
             </p>
           </div>
         ) : (
           filteredStaff.map((staff) => (
             <div
               key={staff.id}
-              className="group rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-md"
+              className="group rounded-lg border border-gray-200 bg-white p-6"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 text-lg font-semibold text-teal-600">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-600">
                     {(staff.name || staff.email).charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="text-sm font-semibold text-gray-900">
                       {staff.name || staff.email.split("@")[0]}
                     </h3>
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${roleColors[staff.role]}`}
-                    >
-                      {roleLabels[staff.role]}
-                    </span>
+                    <p className="text-xs text-gray-500">{roleLabels[staff.role]}</p>
                   </div>
                 </div>
                 {staff.role !== "owner" && (
-                  <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100">
                     <button
                       onClick={() => setEditing(staff)}
-                      className="rounded p-1.5 text-blue-600 hover:bg-blue-50"
+                      className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-900"
                       title="Edit role & outlets"
                     >
                       <Edit className="h-4 w-4" />
@@ -266,7 +252,7 @@ export default function StaffPage() {
                     <button
                       onClick={() => handleRemove(staff)}
                       disabled={busyId === staff.id}
-                      className="rounded p-1.5 text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-red-700 disabled:opacity-50"
                       title="Remove member"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -275,14 +261,14 @@ export default function StaffPage() {
                 )}
               </div>
 
-              <div className="mt-4 space-y-2.5">
+              <div className="mt-4 space-y-2">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-gray-400" />
                   <span className="truncate text-gray-600">{staff.email}</span>
                 </div>
                 {staff.assignedBranches.length > 0 && (
                   <div className="flex items-start gap-2 text-sm">
-                    <Building2 className="mt-0.5 h-4 w-4 text-gray-400" />
+                    <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
                     <span className="line-clamp-2 text-gray-600">
                       {getBranchNames(staff.assignedBranches) || "No outlets assigned"}
                     </span>
@@ -294,8 +280,7 @@ export default function StaffPage() {
                 <div className="text-xs text-gray-500">
                   Joined {staff.createdAt.toLocaleDateString()}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-green-600">
-                  <CheckCircle className="h-3 w-3" />
+                <div className="text-xs text-gray-500">
                   {staff.status === "active" ? "Active" : staff.status}
                 </div>
               </div>
@@ -369,19 +354,19 @@ function EditStaffModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4">
+      <div className="w-full max-w-lg rounded-lg border border-gray-200 bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-sm font-semibold text-gray-900">
             Edit {member.name || member.email}
           </h2>
           <button onClick={onClose} className="rounded-lg p-2 text-gray-400 hover:bg-gray-100">
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
         )}
 
         <label className="mb-2 block text-sm font-medium text-gray-700">Role</label>
@@ -389,7 +374,7 @@ function EditStaffModal({
           value={role}
           onChange={(e) => setRole(e.target.value as UserRole)}
           disabled={!canChangeRole}
-          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:bg-gray-50"
+          className="mb-4 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-gray-50"
         >
           {(Object.entries(roleLabels) as [UserRole, string][])
             .filter(([value]) => value !== "owner")
@@ -411,7 +396,7 @@ function EditStaffModal({
                   type="checkbox"
                   checked={outlets.includes(b.id)}
                   onChange={() => toggle(b.id)}
-                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                  className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-600"
                 />
                 <span className="text-sm text-gray-900">{b.name}</span>
               </label>
@@ -422,16 +407,17 @@ function EditStaffModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 font-medium text-gray-700 hover:bg-gray-50"
+            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
             onClick={save}
             disabled={saving}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
-            {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : "Save Changes"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
+
           </button>
         </div>
       </div>

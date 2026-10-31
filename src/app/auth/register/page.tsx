@@ -5,12 +5,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { getErrorMessage } from "@/lib/errors";
-import { UserPlus, Mail, Lock, User, AlertCircle } from "lucide-react";
+import { UserPlus, Mail, Lock, User, AlertCircle, Chrome } from "lucide-react";
 
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState(searchParams.get("email") || "");
   const [password, setPassword] = useState("");
@@ -48,22 +48,34 @@ function RegisterContent() {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setError("");
+    setLoading(true);
+
+    try {
+      await signInWithGoogle();
+      const redirect = searchParams.get("redirect");
+      router.push(redirect || "/onboarding/organization");
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to sign up with Google. Please try again."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex w-full items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 text-3xl text-white shadow-lg">
-            💊
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">AI-Pharmacy</h1>
-          <p className="mt-2 text-gray-600">Create your pharmacy organization</p>
+          <h1 className="text-3xl font-semibold text-gray-900">AI-Pharmacy</h1>
+          <p className="mt-1 text-sm text-gray-500">Create your pharmacy organization</p>
         </div>
 
         {/* Register Form */}
-        <div className="rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/5">
+        <div className="rounded-lg border border-gray-200 bg-white p-8">
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <AlertCircle className="h-4 w-4" />
               {error}
             </div>
@@ -76,14 +88,14 @@ function RegisterContent() {
                 Full Name
               </label>
               <div className="relative mt-1">
-                <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   placeholder="John Doe"
                 />
               </div>
@@ -95,14 +107,14 @@ function RegisterContent() {
                 Email Address
               </label>
               <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   placeholder="you@example.com"
                 />
               </div>
@@ -114,7 +126,7 @@ function RegisterContent() {
                 Password
               </label>
               <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   id="password"
                   type="password"
@@ -122,7 +134,7 @@ function RegisterContent() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   placeholder="••••••••"
                 />
               </div>
@@ -134,7 +146,7 @@ function RegisterContent() {
                 Confirm Password
               </label>
               <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   id="confirmPassword"
                   type="password"
@@ -142,7 +154,7 @@ function RegisterContent() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   placeholder="••••••••"
                 />
               </div>
@@ -152,19 +164,40 @@ function RegisterContent() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {loading ? (
                 <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                   Creating account...
                 </>
               ) : (
                 <>
-                  <UserPlus className="h-5 w-5" />
+                  <UserPlus className="h-4 w-4" />
                   Create Account
                 </>
               )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative mt-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="bg-white px-2 text-gray-500">Or sign up with</span>
+              </div>
+            </div>
+
+            {/* Google Sign Up */}
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={loading}
+              className="flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Chrome className="h-4 w-4" />
+              Sign up with Google
             </button>
           </form>
 

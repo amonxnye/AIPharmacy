@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as nodemailer from "nodemailer";
+import * as crypto from "crypto";
 
 admin.initializeApp();
 
@@ -290,3 +291,89 @@ export const expireOldInvitations = functions.pubsub
       return null;
     }
   });
+
+/**
+ * Cloud Function to handle ioTec payment webhooks reliably
+ * Uses admin SDK to write subscription data to Firestore with proper authorization
+ * Verifies webhook signature to prevent unauthorized updates
+ */
+export const handleIoTecPaymentWebhook = functions.https.onRequest(
+  async (req, res) => {
+    // Only accept POST requests
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Method not allowed" });
+      return;
+    }
+
+    try {
+      const payload = req.body;
+      const signature = req.headers["x-iotec-signature"] as string;
+
+      // Verify webhook signature
+      const ioTecSecret = process.env.IOTEC_SECRET;
+      if (!ioTecSecret || !signature) {
+        res.status(401).json({ error: "Invalid signature" });
+        return;
+      }
+
+      const hash = crypto
+        .createHmac("sha256", ioTecSecret)
+        .update(JSON.stringify(payload))
+        .digest("hex");
+
+      if (hash !== signature) {
+        res.status(401).json({ error: "Signature mismatch" });
+        return;
+      }
+
+      const { transaction_id, status, organization_id: orgId } = payload;
+
+      // Validate required fields
+      if (!transaction_id || !status || !orgId) {
+        res.status(400).json({ error: "Missing required fields" });
+        return;
+      }
+
+      // Only process successful payments
+      if (status !== "success") {
+        res.status(200).json({ success: true });
+        return;
+      }
+
+      // Calculate subscription dates: start now, end 30 days from now
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1);
+      // Normalize to end-of-day
+      endDate.setHours(23, 59, 59, 999);
+
+      const db = admin.firestore();
+      const subscriptionRef = db
+        .collection("organizations")
+        .doc(orgId)
+        .collection("subscription")
+        .doc(orgId);
+
+      // Use admin SDK to write subscription with proper authorization
+      // This bypasses security rules and ensures atomic write
+      await subscriptionRef.set({
+        organizationId: orgId,
+        startDate: admin.firestore.Timestamp.fromDate(startDate),
+        endDate: admin.firestore.Timestamp.fromDate(endDate),
+        status: "active",
+        paymentReference: transaction_id,
+        renewalEnabled: false,
+        createdAt: admin.firestore.Timestamp.now(),
+        updatedAt: admin.firestore.Timestamp.now(),
+      });
+
+      console.log(
+        `Subscription created for org ${orgId}, transaction ${transaction_id}`
+      );
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("Webhook processing error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+);
