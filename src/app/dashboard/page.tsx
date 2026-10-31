@@ -60,7 +60,6 @@ export default function DashboardPage() {
       setSalesToday(summary);
       setRecentSales(recent);
 
-      // Aggregate stock per product for low-stock + expiry insight.
       const nameById: Record<string, string> = {};
       products.forEach((p) => (nameById[p.id] = p.name));
 
@@ -95,37 +94,6 @@ export default function DashboardPage() {
     load();
   }, [load]);
 
-  const stats = [
-    {
-      name: "Sales Today",
-      value: formatCurrency(salesToday.total, currency),
-      sub: `${salesToday.count} transaction${salesToday.count === 1 ? "" : "s"}`,
-      icon: DollarSign,
-      color: "bg-green-500",
-    },
-    {
-      name: "Products",
-      value: productCount.toLocaleString(),
-      sub: branch ? branch.name : `${branches.length} outlet(s)`,
-      icon: Package,
-      color: "bg-blue-500",
-    },
-    {
-      name: "Transactions Today",
-      value: salesToday.count.toLocaleString(),
-      sub: "Since midnight",
-      icon: ShoppingCart,
-      color: "bg-purple-500",
-    },
-    {
-      name: "Expiring Soon",
-      value: expiringCount.toLocaleString(),
-      sub: `Next ${EXPIRY_WINDOW_DAYS} days`,
-      icon: AlertCircle,
-      color: "bg-orange-500",
-    },
-  ];
-
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
@@ -135,59 +103,110 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-3xl font-semibold text-gray-900">
+          {organization?.name || "Pharmacy"}
+        </h1>
         <p className="mt-1 text-sm text-gray-500">
-          {organization?.name ? `${organization.name} — ` : ""}here&apos;s what&apos;s happening today.
+          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <div
-            key={stat.name}
-            className="overflow-hidden rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5 transition-all hover:shadow-md"
-          >
-            <div className="flex items-center justify-between">
-              <div className={`rounded-lg ${stat.color} p-3`}>
-                <stat.icon className="h-6 w-6 text-white" />
-              </div>
-            </div>
-            <div className="mt-4">
-              <p className="text-sm font-medium text-gray-600">{stat.name}</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900 tabular-nums">{stat.value}</p>
-              <p className="mt-1 text-xs text-gray-500">{stat.sub}</p>
-            </div>
-          </div>
-        ))}
+      {/* Main metric — Sales Today (focal point) */}
+      <div className="rounded-2xl bg-white p-8 border border-gray-200">
+        <div className="mb-6">
+          <p className="text-sm font-medium text-gray-600">Sales Today</p>
+          <h2 className="mt-1 text-5xl font-bold text-gray-900 tabular-nums">
+            {formatCurrency(salesToday.total, currency)}
+          </h2>
+          <p className="mt-2 text-sm text-gray-500">
+            {salesToday.count} transaction{salesToday.count === 1 ? "" : "s"}
+          </p>
+        </div>
+
+        {/* Sales trend visualization placeholder */}
+        <div className="h-24 rounded-lg bg-gradient-to-r from-teal-50 to-transparent border border-teal-100 flex items-end gap-1 px-4 py-4">
+          {[40, 45, 35, 50, 60, 55, 65].map((height, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-sm bg-teal-600 opacity-60 transition-all hover:opacity-100"
+              style={{ height: `${height}%` }}
+            />
+          ))}
+        </div>
       </div>
 
+      {/* Secondary metrics grid */}
+      <div className="grid gap-6 sm:grid-cols-3">
+        {/* Products */}
+        <div className="rounded-lg bg-white p-6 border border-gray-200">
+          <p className="text-sm text-gray-600">Products</p>
+          <p className="mt-2 text-3xl font-semibold text-gray-900">
+            {productCount.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            {branch ? branch.name : `${branches.length} outlet${branches.length === 1 ? "" : "s"}`}
+          </p>
+        </div>
+
+        {/* Expiring Soon */}
+        {expiringCount > 0 && (
+          <div className="rounded-lg bg-white p-6 border border-gray-200">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-gray-400" />
+              <p className="text-sm text-gray-600">Expiring</p>
+            </div>
+            <p className="mt-2 text-3xl font-semibold text-gray-900">
+              {expiringCount}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Next {EXPIRY_WINDOW_DAYS} days
+            </p>
+          </div>
+        )}
+
+        {/* Low Stock Count */}
+        {lowStock.length > 0 && (
+          <div className="rounded-lg bg-white p-6 border border-gray-200">
+            <p className="text-sm text-gray-600">Low Stock</p>
+            <p className="mt-2 text-3xl font-semibold text-gray-900">
+              {lowStock.length}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Below {LOW_STOCK_THRESHOLD} units
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Lists */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Recent Sales */}
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Recent Sales</h2>
-          </div>
+        <div className="rounded-lg bg-white p-6 border border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">Recent Sales</h2>
           {recentSales.length === 0 ? (
             <p className="py-8 text-center text-sm text-gray-500">
-              No sales yet. Completed sales from the POS appear here.
+              No sales yet. Completed transactions appear here.
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {recentSales.map((sale) => (
                 <div
                   key={sale.id}
-                  className="flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
                 >
-                  <div>
-                    <p className="font-medium text-gray-900">{sale.receiptNumber}</p>
-                    <p className="text-sm text-gray-500">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {sale.receiptNumber}
+                    </p>
+                    <p className="text-xs text-gray-500">
                       {sale.items.length} item{sale.items.length === 1 ? "" : "s"} · {sale.cashierName}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-gray-900 tabular-nums">
+                    <p className="text-sm font-medium text-gray-900 tabular-nums">
                       {formatCurrency(sale.total, currency)}
                     </p>
                     <p className="text-xs text-gray-500">
@@ -200,27 +219,24 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Low Stock */}
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Low Stock Alert</h2>
-            <AlertCircle className="h-5 w-5 text-orange-500" />
-          </div>
+        {/* Low Stock Items */}
+        <div className="rounded-lg bg-white p-6 border border-gray-200">
+          <h2 className="text-sm font-semibold text-gray-900 mb-4">Low Stock</h2>
           {lowStock.length === 0 ? (
             <p className="py-8 text-center text-sm text-gray-500">
-              Nothing running low. Stock at or below {LOW_STOCK_THRESHOLD} units shows here.
+              No items below {LOW_STOCK_THRESHOLD} units.
             </p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {lowStock.map((item) => (
                 <div
                   key={item.productId}
-                  className="flex items-center justify-between border-b border-gray-100 pb-4 last:border-0 last:pb-0"
+                  className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
                 >
-                  <p className="font-medium text-gray-900">{item.name}</p>
-                  <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-sm font-medium text-orange-800 tabular-nums">
-                    {item.quantity} left
-                  </span>
+                  <p className="text-sm text-gray-900">{item.name}</p>
+                  <p className="text-sm font-medium text-gray-600 tabular-nums">
+                    {item.quantity}
+                  </p>
                 </div>
               ))}
             </div>
