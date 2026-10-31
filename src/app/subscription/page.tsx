@@ -49,58 +49,42 @@ export default function SubscriptionPage() {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Subscription & Billing</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your subscription and track earnings</p>
+        <h1 className="text-3xl font-semibold text-gray-900">Subscription</h1>
+        <p className="mt-1 text-sm text-gray-500">Plan, billing, and earnings</p>
       </div>
 
       {/* Status Cards */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Subscription Status */}
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Subscription Status</p>
-              <h3 className="mt-2 text-2xl font-bold text-gray-900">
-                {isActive ? "Active" : "Inactive"}
-              </h3>
-            </div>
-            <div
-              className={`rounded-full p-3 ${
-                isActive ? "bg-green-100" : "bg-red-100"
-              }`}
-            >
-              {isActive ? (
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              ) : (
-                <AlertCircle className="h-6 w-6 text-red-600" />
-              )}
-            </div>
-          </div>
+        <div className="rounded-2xl border border-gray-200 bg-white p-8">
+          <p className="text-sm font-medium text-gray-600">Status</p>
+          <h3 className={`mt-1 text-5xl font-bold ${isActive ? "text-gray-900" : "text-red-700"}`}>
+            {isActive ? "Active" : "Inactive"}
+          </h3>
+          {isActive && (
+            <p className="mt-2 text-sm text-gray-500 tabular-nums">
+              {daysRemaining} day{daysRemaining === 1 ? "" : "s"} remaining
+            </p>
+          )}
 
           {subscription && (
-            <div className="mt-4 space-y-2 text-sm text-gray-600">
+            <dl className="mt-6 space-y-2 border-t border-gray-100 pt-4 text-sm">
               <div className="flex justify-between">
-                <span>Start date:</span>
-                <span className="font-medium">
+                <dt className="text-gray-600">Started</dt>
+                <dd className="font-medium text-gray-900 tabular-nums">
                   {new Date(subscription.startDate).toLocaleDateString()}
-                </span>
+                </dd>
               </div>
               <div className="flex justify-between">
-                <span>End date:</span>
-                <span className="font-medium">
+                <dt className="text-gray-600">Ends</dt>
+                <dd className="font-medium text-gray-900 tabular-nums">
                   {new Date(subscription.endDate).toLocaleDateString()}
-                </span>
+                </dd>
               </div>
-              {isActive && (
-                <div className="flex justify-between">
-                  <span>Days remaining:</span>
-                  <span className="font-medium">{daysRemaining} days</span>
-                </div>
-              )}
-            </div>
+            </dl>
           )}
 
           {!subscription && (
@@ -112,16 +96,16 @@ export default function SubscriptionPage() {
           <button
             onClick={handleRenewSubscription}
             disabled={initiating}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 font-medium text-white hover:bg-teal-700 disabled:opacity-50"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 disabled:opacity-50"
           >
             {initiating ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <CreditCard className="h-5 w-5" />
+                <CreditCard className="h-4 w-4" />
                 {isActive ? "Renew Subscription" : "Get Subscription"}
               </>
             )}
@@ -129,54 +113,45 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Pricing */}
-        <div className="rounded-xl bg-gradient-to-br from-teal-50 to-teal-100 p-6 ring-1 ring-teal-200">
-          <p className="text-sm font-medium text-teal-700">Subscription Plan</p>
-          <h3 className="mt-2 text-2xl font-bold text-teal-900">Unlimited Users</h3>
-          <div className="mt-4 space-y-2 text-sm text-teal-700">
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h2 className="text-sm font-semibold text-gray-900">Plan</h2>
+          <p className="mt-2 text-3xl font-semibold text-gray-900 tabular-nums">
+            {formatCurrency(100000, "UGX")}
+            <span className="ml-1 text-sm font-normal text-gray-500">/ month</span>
+          </p>
+          <dl className="mt-6 space-y-2 border-t border-gray-100 pt-4 text-sm">
             <div className="flex justify-between">
-              <span>Price per month:</span>
-              <span className="font-medium">UGX 100,000</span>
+              <dt className="text-gray-600">Users</dt>
+              <dd className="font-medium text-gray-900">Unlimited</dd>
             </div>
             <div className="flex justify-between">
-              <span>Users included:</span>
-              <span className="font-medium">Unlimited</span>
+              <dt className="text-gray-600">Billing cycle</dt>
+              <dd className="font-medium text-gray-900">Monthly</dd>
             </div>
-            <div className="flex justify-between">
-              <span>Billing cycle:</span>
-              <span className="font-medium">Monthly</span>
-            </div>
-          </div>
-          <div className="mt-4 space-y-2 border-t border-teal-200 pt-4 text-sm font-medium text-teal-900">
-            <div className="flex justify-between">
-              <span>Your cost per month:</span>
-              <span>{formatCurrency(100000, "UGX")}</span>
-            </div>
-          </div>
+          </dl>
         </div>
       </div>
 
       {/* Messages */}
       {error && (
-        <div className="flex items-center gap-2 rounded-lg bg-red-50 p-4 text-sm text-red-700">
-          <AlertCircle className="h-5 w-5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
       )}
 
       {message && (
-        <div className="flex items-center gap-2 rounded-lg bg-green-50 p-4 text-sm text-green-700">
-          <CheckCircle className="h-5 w-5 shrink-0" />
+        <div className="flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 p-4 text-sm text-teal-800">
+          <CheckCircle className="h-4 w-4 shrink-0" />
           {message}
         </div>
       )}
 
       {/* Earnings */}
       {orgId && (
-        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Your Earnings</h2>
-            <p className="mt-1 text-sm text-gray-600">Track revenue from your sales</p>
-          </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h2 className="mb-4 text-sm font-semibold text-gray-900">Earnings</h2>
+
           <EarningsWidget organizationId={orgId} currency={organization?.currency || "UGX"} />
         </div>
       )}

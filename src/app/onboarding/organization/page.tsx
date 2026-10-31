@@ -91,19 +91,16 @@ export default function OrganizationSetupPage() {
 
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-teal-700 text-white shadow-lg">
-            <Building2 className="h-8 w-8" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">Set Up Your Organization</h1>
-          <p className="mt-2 text-gray-600">
-            Let&apos;s start by creating your pharmacy organization
+          <h1 className="text-3xl font-semibold text-gray-900">Set Up Your Organization</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Your pharmacy&apos;s name and details
           </p>
         </div>
 
         {/* Form */}
-        <div className="rounded-2xl bg-white p-8 shadow-xl ring-1 ring-gray-900/5">
+        <div className="rounded-lg border border-gray-200 bg-white p-8">
           {error && (
-            <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-800">
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
               <AlertCircle className="h-4 w-4" />
               {error}
             </div>
@@ -116,14 +113,14 @@ export default function OrganizationSetupPage() {
                 Organization Name *
               </label>
               <div className="relative mt-1">
-                <Building2 className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   placeholder="e.g., HealthCare Pharmacy"
                 />
               </div>
@@ -138,13 +135,13 @@ export default function OrganizationSetupPage() {
                 Currency *
               </label>
               <div className="relative mt-1">
-                <DollarSign className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <DollarSign className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <select
                   id="currency"
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                 >
                   <optgroup label="Africa">
                     <option value="UGX">UGX - Ugandan Shilling</option>
@@ -200,7 +197,7 @@ export default function OrganizationSetupPage() {
                 Tax Rate (%) *
               </label>
               <div className="relative mt-1">
-                <Percent className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <Percent className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   id="taxRate"
                   type="number"
@@ -210,7 +207,7 @@ export default function OrganizationSetupPage() {
                   value={taxRate}
                   onChange={(e) => setTaxRate(parseFloat(e.target.value))}
                   required
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-4 text-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20"
                   placeholder="18"
                 />
               </div>
@@ -223,11 +220,11 @@ export default function OrganizationSetupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 font-medium text-white shadow-sm transition-all hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 px-4 py-3 text-sm font-medium text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               {loading ? (
                 <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                   Creating organization...
                 </>
               ) : (

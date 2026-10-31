@@ -38,17 +38,14 @@ export default function SelectOrganizationPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100 px-4 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-600 mb-4">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-semibold text-gray-900">
             Select Organization
           </h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-gray-500">
             Choose which organization you want to access
           </p>
         </div>
@@ -59,30 +56,27 @@ export default function SelectOrganizationPage() {
             <button
               key={org.id}
               onClick={() => handleSelectOrg(org.id)}
-              className="group relative flex flex-col items-center rounded-xl bg-white p-8 shadow-lg ring-1 ring-gray-900/5 transition-all hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+              className="group relative flex items-center gap-4 rounded-lg border border-gray-200 bg-white p-6 text-left hover:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:ring-offset-2"
             >
               {/* Organization Logo/Icon */}
               {org.logo ? (
                 <img
                   src={org.logo}
                   alt={org.name}
-                  className="h-20 w-20 rounded-lg object-cover mb-4"
+                  className="h-12 w-12 rounded-lg object-cover"
                 />
               ) : (
-                <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-teal-100 mb-4">
-                  <Building2 className="h-10 w-10 text-teal-600" />
-                </div>
+                <Building2 className="h-6 w-6 shrink-0 text-gray-400" />
               )}
 
               {/* Organization Name */}
-              <h3 className="text-center text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="flex-1 text-sm font-semibold text-gray-900">
                 {org.name}
               </h3>
 
               {/* Arrow Icon (appears on hover) */}
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
-                <ArrowRight className="h-6 w-6 text-teal-600" />
-              </div>
+              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-teal-700" />
+
             </button>
           ))}
         </div>
